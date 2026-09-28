@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#e8853a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="生活台">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%23e8853a'/%3E%3Cg%20fill='none'%20stroke='white'%20stroke-width='4'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M14%2028%20L32%2014%20L50%2028'/%3E%3Cpath%20d='M18%2026%20V48%20H46%20V26'/%3E%3Cpath%20d='M27%2048%20V38%20H37%20V48'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<title>生活工作台 · Life Desk</title>
+<style>
+  :root{
+    --bg:#f4f1ea; --surface:#fffdf8; --surface-2:#faf7f0;
+    --ink:#2c2823; --ink-2:#5a534a; --muted:#9a9186; --line:#e7e0d4; --line-2:#efe9dd;
+    --brand:#b06a4f; --brand-soft:#f0e3da;
+    --in:#4f8a5b; --out:#c0553f; --sage:#7c8a5a; --plum:#9a6b86;
+    --warn:#c9883a; --danger:#bf4a3a; --ok:#4f8a5b;
+    --shadow:0 1px 2px rgba(44,40,35,.04), 0 8px 24px rgba(44,40,35,.05);
+    --radius:16px; --radius-s:10px;
+    --serif:"Songti SC","Noto Serif SC",Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    /* 各模块主题色 */
+    --c-home:#e8853a; --c-home-soft:#fdeede;
+    --c-fin:#1f9e6b;  --c-fin-soft:#e0f4ea;
+    --c-med:#2f8fd1;  --c-med-soft:#e3f0fb;
+    --c-per:#e15a9c;  --c-per-soft:#fce3f0;
+    --c-trip:#8b5cf0; --c-trip-soft:#efe8fc;
+    /* 当前激活模块色（由 JS 在切换视图时设置） */
+    --mc:var(--c-home); --mc-soft:var(--c-home-soft);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--serif);font-weight:600;letter-spacing:.01em;margin:0;color:var(--ink)}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font-family:inherit;font-size:15px;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-s);
+    padding:11px 12px;width:100%;outline:none;transition:border-color .15s}
+  input:focus,select:focus,textarea:focus{border-color:var(--mc)}
+  input[type=number]{font-variant-numeric:tabular-nums}
+  textarea{resize:vertical;min-height:60px}
+  ::placeholder{color:var(--muted)}
+  a{color:var(--brand)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    padding:11px 16px;border-radius:var(--radius-s);font-size:14px;font-weight:500;
+    background:var(--mc);color:#fff;transition:filter .15s,transform .05s,border-color .15s}
+  .btn:hover{filter:brightness(1.07)} .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:var(--surface);color:var(--ink-2);border-color:var(--line)}
+  .btn.ghost:hover{background:var(--surface-2)}
+  .btn.sm{padding:8px 12px;font-size:13px}
+  .btn.danger{background:#fff;color:var(--danger);border-color:#eccfc9}
+  .btn.block{width:100%}
+  .icon{width:20px;height:20px;display:inline-block;vertical-align:middle;flex:0 0 auto}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .muted{color:var(--muted)} .small{font-size:13px}
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;
+    font-size:12px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+  .tag-in{color:var(--in);background:#eaf3ec;border-color:#d4e7d8}
+  .tag-out{color:var(--out);background:#fbeae6;border-color:#f1d3cc}
+  .pos{color:var(--in)} .neg{color:var(--out)}
+
+  /* layout */
+  .app{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+  .sidebar{background:var(--surface);border-right:1px solid var(--line);
+    padding:22px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px}
+  .brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--c-home),#f1a85c);
+    display:flex;align-items:center;justify-content:center;color:#fff}
+  .brand b{font-family:var(--serif);font-size:18px;font-weight:600}
+  .brand span{display:block;font-size:11px;color:var(--muted);letter-spacing:.18em}
+  .nav button{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:12px;
+    color:var(--ink-2);font-size:14.5px;width:100%;text-align:left;transition:background .15s,color .15s}
+  .nav button:hover{background:var(--surface-2)}
+  .nav button .ic{width:20px;height:20px;color:var(--muted);flex:0 0 auto}
+  .nav button[data-view="dashboard"] .ic{color:var(--c-home)}
+  .nav button[data-view="finance"] .ic{color:var(--c-fin)}
+  .nav button[data-view="medical"] .ic{color:var(--c-med)}
+  .nav button[data-view="period"] .ic{color:var(--c-per)}
+  .nav button[data-view="trip"] .ic{color:var(--c-trip)}
+  .nav button.active{background:var(--mc-soft);color:var(--mc);font-weight:600}
+  .nav button.active .ic{color:var(--mc)}
+  .nav .spacer{flex:1}
+  .side-foot{font-size:11px;color:var(--muted);padding:10px 12px;line-height:1.5}
+
+  .main{padding:0;min-width:0;display:flex;flex-direction:column}
+  .topbar{position:sticky;top:0;z-index:20;background:rgba(244,241,234,.86);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+    padding:14px 28px;display:flex;align-items:center;gap:16px}
+  .topbar .greet b{font-family:var(--serif);font-size:19px}
+  .topbar .greet .date{font-size:12.5px;color:var(--muted)}
+  .topbar .grow{flex:1}
+  .topbar .tools{display:flex;gap:8px;align-items:center}
+  .store-dot{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);
+    padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+  .store-dot i{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+  .store-dot.bad i{background:var(--danger)}
+  .store-dot.off i{background:var(--warn)}
+
+  .content{padding:26px 28px 120px;max-width:1080px;width:100%}
+  .view{display:none;animation:fade .25s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .page-head{position:relative;padding-left:14px;margin-bottom:18px}
+  .page-head::before{content:"";position:absolute;left:0;top:5px;bottom:5px;width:5px;border-radius:3px;background:var(--mc)}
+  .page-head h2{font-size:24px}
+  .page-head p{color:var(--muted);margin:4px 0 0;font-size:13.5px}
+  .sec{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--mc);border-radius:var(--radius);
+    padding:18px 20px;margin-bottom:18px;box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s}
+  .sec:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(44,40,35,.09)}
+  .sec h3{font-size:17px;display:flex;align-items:center;gap:9px;margin-bottom:14px}
+  .sec h3::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--mc);flex:0 0 auto}
+  .sec h3 .sub{font-family:var(--sans);font-weight:400;font-size:12.5px;color:var(--muted);margin-left:auto}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:820px){.grid2,.grid3{grid-template-columns:1fr}}
+
+  label.fld{display:block;font-size:12.5px;color:var(--ink-2);margin:0 0 5px;font-weight:500}
+  .field{margin-bottom:12px}
+  .field.half{display:inline-block;width:calc(50% - 7px);margin-right:12px;vertical-align:top}
+  .field.half:nth-child(even){margin-right:0}
+  @media(max-width:560px){.field.half{width:100%;margin-right:0}}
+
+  /* dashboard */
+  .hero{background:linear-gradient(135deg,var(--c-home-soft),#fffdf8);border:1px solid var(--line);
+    border-radius:var(--radius);padding:22px 24px;margin-bottom:18px;display:flex;gap:24px;align-items:center;box-shadow:var(--shadow)}
+  .hero .htxt{flex:1;min-width:0}
+  .hero .hrow{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:4px}
+  .hero .hrow h1{font-size:25px;margin-bottom:0}
+  .refresh-btn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:11px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);flex:0 0 auto;transition:border-color .15s,color .15s}
+  .refresh-btn svg{width:18px;height:18px}
+  .refresh-btn:hover{border-color:var(--mc);color:var(--mc)}
+  .refresh-btn.spin svg{animation:spin .55s linear}
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  .hero .quote{font-family:var(--serif);font-size:19px;line-height:1.6;color:var(--ink);margin-top:10px;border-left:3px solid var(--c-home);padding-left:14px}
+  .hero .quote-sub{font-size:12.5px;color:var(--muted);margin-top:10px}
+
+  .today-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);
+    border-radius:12px;margin-bottom:10px;background:var(--surface)}
+  .today-item .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--muted)}
+  .today-item.over .dot{background:var(--danger)}
+  .today-item .ti-main{flex:1;min-width:0}
+  .today-item .ti-main b{font-weight:600}
+  .today-item .ti-main .meta{font-size:12.5px;color:var(--muted)}
+  .today-item.over{background:#fdf2ef;border-color:#f2d6cf}
+  .empty{color:var(--muted);font-size:13.5px;padding:10px 2px;text-align:center}
+
+  .glance{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:820px){.glance{grid-template-columns:1fr 1fr}}
+  .gl{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--gc);border-radius:14px;padding:14px 15px;transition:transform .2s,box-shadow .2s}
+  .gl:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(44,40,35,.08)}
+  .gl .k{font-size:12px;color:var(--muted)}
+  .gl .v{font-family:var(--serif);font-size:23px;margin-top:4px;color:var(--gc)}
+  .gl .d{font-size:12px;color:var(--ink-2);margin-top:3px}
+  .gl .d.hl{color:var(--gc);font-weight:600}
+  .gl .d.now{color:var(--danger);font-weight:600}
+  .gl .d.warn{color:var(--warn);font-weight:600}
+
+  /* lists */
+  .list-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line-2)}
+  .list-row:last-child{border-bottom:none}
+  .list-row .lr-main{flex:1;min-width:0}
+  .list-row .lr-main b{font-weight:600}
+  .list-row .lr-main .meta{font-size:12.5px;color:var(--muted);white-space:normal;overflow:visible}
+  .list-row .lr-main .lr-note{font-size:12.5px;color:var(--ink);margin-top:5px;white-space:pre-wrap;word-break:break-word;line-height:1.55}
+  .list-row .lr-amt{font-variant-numeric:tabular-nums;font-weight:600}
+  .lr-acts{display:flex;gap:2px;flex:0 0 auto}
+  .lr-x{color:var(--muted);padding:6px;border-radius:8px;font-size:13px}
+  .lr-x:hover{background:var(--surface-2);color:var(--danger)}
+
+  .seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+  .seg button{padding:7px 14px;border-radius:8px;font-size:13.5px;color:var(--ink-2)}
+  .seg button.on{background:var(--surface);color:var(--mc);font-weight:600;box-shadow:var(--shadow)}
+
+  .bar{height:9px;border-radius:999px;background:var(--line-2);overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:999px;background:var(--mc);transition:width .3s}
+
+  table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.tbl th{text-align:left;color:var(--muted);font-weight:500;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line)}
+  table.tbl td{padding:9px 10px;border-bottom:1px solid var(--line-2);font-variant-numeric:tabular-nums}
+  table.tbl tr:last-child td{border-bottom:none}
+
+  /* bottom tab (mobile) */
+  .tabbar{display:none}
+  @media(max-width:860px){
+    .app{grid-template-columns:1fr}
+    .sidebar{display:none}
+    .topbar{padding:12px 16px}
+    .content{padding:18px 16px 110px}
+    .tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:30;
+      background:var(--surface);border-top:1px solid var(--line);
+      padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:space-around}
+    .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+      font-size:10.5px;color:var(--muted);padding:6px 2px}
+    .tabbar button.active{background:var(--mc-soft);color:var(--mc);font-weight:600}
+    .tabbar button[data-view="dashboard"] .ic{color:var(--c-home)}
+    .tabbar button[data-view="finance"] .ic{color:var(--c-fin)}
+    .tabbar button[data-view="medical"] .ic{color:var(--c-med)}
+    .tabbar button[data-view="period"] .ic{color:var(--c-per)}
+    .tabbar button[data-view="trip"] .ic{color:var(--c-trip)}
+    .tabbar button.active .ic{color:var(--mc)}
+    .tabbar .ic{width:22px;height:22px}
+  }
+
+  /* banner & modal */
+  .banner{position:fixed;left:50%;transform:translateX(-50%);top:14px;z-index:60;
+    background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-size:13.5px;
+    box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;max-width:92vw}
+  .banner.bad{background:var(--danger)} .banner.warn{background:var(--warn)}
+  .banner button{color:#fff;text-decoration:underline;font-size:13px}
+
+  /* install-to-phone hint (mobile only) */
+  #installHint{display:none;position:fixed;left:50%;transform:translateX(-50%);
+    bottom:calc(74px + env(safe-area-inset-bottom));z-index:40;
+    background:var(--ink);color:#fff;font-size:13px;padding:9px 14px;border-radius:999px;
+    box-shadow:var(--shadow);align-items:center;gap:8px;cursor:pointer;white-space:nowrap}
+  #installHint .x{opacity:.6;font-size:12px;margin-left:2px}
+  @media(max-width:860px){#installHint.show{display:flex}}
+  #installSteps ol{margin:12px 0 0;padding-left:20px;color:var(--ink-2);font-size:14px;line-height:1.7}
+  #installSteps ol b{color:var(--ink)}
+  #installSteps .warn{color:var(--warn);font-size:13px;margin-top:10px}
+  .modal-mask{position:fixed;inset:0;background:rgba(44,40,35,.42);z-index:80;display:none;
+    align-items:center;justify-content:center;padding:20px}
+  .modal-mask.show{display:flex}
+  .modal{background:var(--surface);border-radius:18px;max-width:460px;width:100%;padding:24px;
+    box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .modal h3{font-size:19px;margin-bottom:8px}
+  .modal p{color:var(--ink-2);font-size:14px}
+  .modal .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .cal .cd{aspect-ratio:1/1;border-radius:9px;border:1px solid var(--line-2);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12.5px;
+    position:relative;background:var(--surface);cursor:pointer}
+  .cal .cd .d{font-variant-numeric:tabular-nums}
+  .cal .cd.period{background:#fbe3ec;border-color:#f3c9d8;color:#a23b63}
+  .cal .cd.ovu{background:#e7eef7;border-color:#cfdcf0;color:#3f63a3}
+  .cal .cd.fert{background:#eef3ea;border-color:#dbe6d2}
+  .cal .cd.today{outline:2px solid var(--mc);outline-offset:-1px}
+  .cal .cd .pin{position:absolute;top:3px;right:4px;font-size:8px}
+  .cal-h{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px}
+  .cal-h span{text-align:center;font-size:11px;color:var(--muted);padding:2px}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:10px}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+
+  .heat{display:grid;grid-template-columns:repeat(15,1fr);gap:4px}
+  @media(max-width:560px){.heat{grid-template-columns:repeat(10,1fr)}}
+  .heat .h{aspect-ratio:1/1;border-radius:5px;background:var(--line-2)}
+  .h0{background:var(--line-2)} .h1{background:#efe0d6} .h2{background:#e3c4b2} .h3{background:#d3a18a} .h4{background:#b06a4f}
+
+  .quote{background:var(--surface-2);border-left:3px solid var(--mc);border-radius:0 12px 12px 0;
+    padding:14px 16px;font-family:var(--serif);font-size:15.5px;color:var(--ink)}
+  .quote .en{font-style:italic} .quote .zh{color:var(--ink-2);font-size:13.5px;margin-top:5px;font-family:var(--sans)}
+
+  .stat-num{font-family:var(--serif);font-size:30px}
+  .stat-lbl{font-size:12px;color:var(--muted)}
+  .hr{height:1px;background:var(--line);border:none;margin:16px 0}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:10px 18px;border-radius:10px;font-size:13.5px;z-index:90;opacity:0;transition:opacity .25s;pointer-events:none}
+  .toast.show{opacity:1}
+  /* 年历（经期）—— 记录直接按月分行显示 */
+  .year-cal{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px;align-items:start}
+  .ym{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
+  .ym-off{background:var(--surface-2)}
+  .ym-h{display:flex;align-items:baseline;gap:8px;color:var(--ink)}
+  .ym-h b{font-size:14px}
+  .ym-cnt{font-size:11.5px;color:var(--muted);margin-left:auto}
+  .ym-list{display:flex;flex-direction:column}
+  .ym-row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line)}
+  .ym-row:first-child{border-top:none;padding-top:6px}
+  .ym-main{flex:1 1 auto;min-width:0}
+  .ym-pd{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 7px;border-radius:8px;background:#fbe3ec;color:#c45b7c;font-weight:600;font-size:13px;font-family:inherit;line-height:1;cursor:pointer;border:none}
+  .ym-pd:hover{background:#f7d3df}
+  .ym-meta{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .ym-note{font-size:12.5px;color:var(--ink);margin-top:4px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+  .ym-empty{color:var(--muted);font-size:12.5px;padding:4px 0}
+  .ym-hint{grid-column:1/-1;font-size:12px;color:var(--muted);text-align:center;padding:2px 0}
+  /* 年历：预计月置顶 + 本月高亮 */
+  .ym-pred-pill{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 7px;border-radius:8px;background:#e3f6ea;color:#1f9d4d;border:1px solid #bfe6cb;font-weight:600;font-size:13px;font-family:inherit;line-height:1}
+  .ym-meta.pred{color:#1f7a3d}
+  .ym-row.ym-pred{background:#f3fcf6;border-radius:8px;margin:0 -6px;padding:9px 6px}
+  .ym-pred-m{border-color:#bfe6cb;box-shadow:0 0 0 1px #bfe6cb inset}
+  .ym-pred-tag{font-size:11px;color:#1f7a3d;background:#eafaf0;border:1px solid #bfe6cb;border-radius:6px;padding:1px 7px;margin-left:8px}
+  .ym-cur{border-color:var(--mc);box-shadow:0 0 0 1px var(--mc) inset}
+  .ym-cur-tag{font-size:11px;color:#fff;background:var(--mc);border-radius:6px;padding:1px 7px;margin-left:8px}
+
+  /* 检验报告编辑器 */
+  .lab-items{display:flex;flex-direction:column;gap:8px}
+  .lab-row-edit{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .lab-row-edit input{flex:1 1 88px;min-width:0;padding:8px 9px;font-size:13px}
+  .lab-row-edit .li-name{flex:2 1 120px}
+  .lab-row-edit .li-x{flex:0 0 auto;width:30px;height:30px;padding:0;color:var(--muted);border-radius:8px}
+  .lab-row-edit .li-x:hover{background:var(--surface-2);color:var(--danger)}
+  .lab-row-edit .li-type{flex:0 0 62px;min-width:0;padding:8px 6px;font-size:13px}
+  .lab-row-edit.type-qual .li-low,
+  .lab-row-edit.type-qual .li-high,
+  .lab-row-edit.type-qual .li-unit{display:none}
+  .lab-copy-item{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;width:100%;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface-2);cursor:pointer}
+  .lab-copy-item:hover{border-color:var(--mc)}
+  .lab-copy-item .small{font-size:11.5px}
+  .lab-card{border:1px solid var(--line);border-radius:var(--radius-s);padding:12px 14px;margin-bottom:10px;background:var(--surface)}
+  .lab-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+  .lab-head .muted{font-size:12.5px}
+  .lab-row{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line-2)}
+  .lab-row:last-child{border-bottom:none}
+  .lab-tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;margin-left:6px;vertical-align:1px}
+  .lab-tag.ok{background:#e8f0ea;color:var(--ok)}
+  .lab-tag.low{background:#e9eef7;color:#3f63a3}
+  .lab-tag.high{background:#f6e6e1;color:var(--out)}
+  .li-date{display:inline-block;margin-left:7px;font-size:11.5px;color:var(--muted);background:var(--surface-2);border:1px solid var(--line-2);border-radius:999px;padding:0 8px;vertical-align:1px}
+  /* 检验报告：科室 / 医生 / 复诊日 */
+  .lab-head-main{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
+  .lab-who{font-size:13px;color:var(--ink-2);font-weight:500}
+  .lab-next-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:4px 0 8px;font-size:12.5px;color:var(--muted)}
+  .lab-next{display:inline-block;font-size:12.5px;color:var(--warn);background:#fdf4e6;border:1px solid #eddcc0;border-radius:999px;padding:1px 9px;font-variant-numeric:tabular-nums}
+  .lab-next-list{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:44px;padding:4px 8px;border:1px dashed var(--line);border-radius:var(--radius-s);background:var(--surface)}
+  .lab-next-chip{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface-2);padding:1px 3px 1px 8px}
+  .lab-next-chip input[type=date]{border:0;background:transparent;padding:4px 2px;font-size:13px;width:140px;border-radius:0}
+  .lab-next-chip input[type=date]:focus{border-color:transparent}
+  .lab-next-chip .li-x{width:24px;height:24px;padding:0;font-size:14px;color:var(--muted);border-radius:999px}
+  .lab-next-chip .li-x:hover{background:var(--mc-soft);color:var(--danger)}
+  .lab-next-empty{font-size:12.5px;color:var(--muted)}
+  /* 检验报告：报告列表 + 内联趋势 */
+  .lab-thumb{width:88px;height:88px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+  .lab-thumb.ro{cursor:zoom-in}
+  .lab-imgs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
+  .lab-card-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+  .lab-card-acts .lr-x{border:1px solid var(--line);padding:5px 12px}
+  .lab-trend{margin-top:6px;padding:8px 10px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:8px;font-size:14px;line-height:1.5}
+  .lab-trend-head{font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;letter-spacing:.02em}
+  .lab-trend-list{display:flex;flex-direction:column;gap:4px}
+  .lab-trend-row{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink-2)}
+  .lab-trend-row.cur{font-weight:700;color:var(--ink)}
+  .lab-trend-row .d{flex:0 0 84px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .lab-trend-row .v{font-weight:600;font-variant-numeric:tabular-nums;font-size:14.5px}
+  .lab-trend-row .cmp-arrow{font-size:13px}
+  .cmp-track.sm{flex:0 0 64px;width:64px;height:8px;background:var(--surface);border-radius:4px;overflow:hidden;margin-left:auto}
+  .cmp-track.sm .cmp-bar{display:block;height:100%;border-radius:4px}
+  .lab-lightbox{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;cursor:zoom-out}
+  .lab-lightbox img{max-width:92vw;max-height:82vh;border-radius:10px;background:#fff}
+  .lab-lightbox-tip{color:#fff;opacity:.8;font-size:12px}
+  /* 常用模板（自定义） */
+  .lab-tpl{border:1px solid var(--line);border-radius:var(--radius-s);padding:12px;margin-top:10px;background:var(--surface-2)}
+  .tpl-hint{margin:0 0 8px;font-size:12px;color:var(--muted);line-height:1.5}
+  .tpl-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .tpl-chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:var(--surface);overflow:hidden}
+  .tpl-chip .tpl-use{border:0;background:transparent;padding:5px 11px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+  .tpl-chip .tpl-use:hover{background:var(--surface-2)}
+  .tpl-chip .tpl-edit,.tpl-chip .tpl-del{border:0;background:transparent;padding:5px 7px;font-size:12px;color:var(--muted);cursor:pointer;line-height:1}
+  .tpl-chip .tpl-edit:hover{color:var(--mc)}
+  .tpl-chip .tpl-del:hover{color:var(--danger)}
+  .tpl-form{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+  .tpl-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+  .tpl-row input{flex:1 1 80px;min-width:0;padding:8px 9px;font-size:13px}
+  .tpl-row .tr-name{flex:2 1 130px}
+  .tpl-row .li-x{flex:0 0 auto;width:30px;height:30px;padding:0;color:var(--muted);border-radius:8px;border:1px solid transparent;background:transparent;cursor:pointer;font-size:15px}
+  .tpl-row .li-x:hover{background:var(--surface);color:var(--danger)}
+  .tpl-acts{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+  .lab-sub{font-size:14px;margin:16px 0 8px;font-weight:600;color:var(--ink)}
+  .lab-sub .sub{font-weight:400;color:var(--muted);font-size:12px}
+  .lab-row .lr-main{flex:1 1 auto;min-width:0}
+  .cmp-card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:var(--surface)}
+  .cmp-head{display:flex;align-items:baseline;gap:8px;font-size:13.5px;margin-bottom:6px;flex-wrap:wrap}
+  .cmp-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-top:1px dashed var(--line-2)}
+  .cmp-row:first-of-type{border-top:none}
+  .cmp-date{width:92px;flex:0 0 auto;color:var(--muted);font-size:12.5px}
+  .cmp-val{width:150px;flex:0 0 auto;font-size:13px;font-weight:600}
+  .cmp-track{flex:1 1 auto;height:10px;background:var(--surface-2);border-radius:6px;overflow:hidden;min-width:40px}
+  .cmp-bar{display:block;height:100%;border-radius:6px;background:var(--ok)}
+  .cmp-bar.ok{background:#7fb98a}
+  .cmp-bar.low{background:#5b86c9}
+  .cmp-bar.high{background:#d98a73}
+  .cmp-bar.none{background:transparent}
+  .cmp-arrow.up{color:#c0653f;font-size:12px;font-weight:600}
+  .cmp-arrow.down{color:#3f7fc0;font-size:12px;font-weight:600}
+  .lr-x.sm{padding:2px 8px;font-size:12px;height:auto}
+
+  /* 经期间隔条 */
+  .iv-row{display:flex;align-items:center;gap:4px;margin:8px 0;font-size:13px;color:var(--ink-2)}
+  .iv-row .iv-lbl{flex:0 0 92px}
+  .iv-row .iv-val{flex:0 0 44px;text-align:right;font-variant-numeric:tabular-nums}
+
+  /* 逾期标红 */
+  .list-row.over{background:#fbeae6}
+  .list-row.over .lr-main b{color:var(--danger)}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar (desktop) -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/><path d="M10 19v-5h4v5"/></svg>
+      </div>
+      <div><b>生活工作台</b><span>LIFE DESK</span></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-view="dashboard" class="active">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日概览</button>
+      <button data-view="finance">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.4"/><path d="M6 9v6M18 9v6"/></svg>记账理财</button>
+      <button data-view="medical">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 4v16M4 12h16"/><circle cx="12" cy="12" r="9"/></svg>就诊记录</button>
+      <button data-view="period">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3a6 6 0 1 0 7 7"/><path d="M14 3A6 6 0 0 0 8 9a6 6 0 0 0 6 6"/><path d="M14 3v6h-6"/></svg>经期管理</button>
+      <button data-view="trip">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>行程</button>
+      <div class="spacer"></div>
+    </nav>
+    <div class="side-foot">数据存于本机浏览器<br>关闭页面不丢失 · 可导出备份</div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="greet"><b id="greetText">你好</b><div class="date" id="topDate"></div></div>
+      <div class="grow"></div>
+      <div class="tools">
+        <span class="store-dot" id="storeDot"><i></i><span id="storeTxt">已同步</span></span>
+        <button class="btn ghost sm" id="btnExport">导出备份</button>
+        <button class="btn ghost sm" id="btnImport">导入恢复</button>
+        <input type="file" id="fileImport" accept="application/json,.json" hidden>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- ============ DASHBOARD ============ -->
+      <section class="view active" id="view-dashboard">
+        <div class="hero">
+          <div class="htxt">
+            <div class="hrow">
+              <h1 id="heroTitle">今天，慢慢来</h1>
+              <button class="refresh-btn" id="btnRefresh" title="刷新概览" aria-label="刷新概览">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.64-6.36" stroke-linecap="round"/><path d="M21 4v5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+            <div class="quote" id="dailyQuote"></div>
+            <div class="quote-sub" id="quoteSub"></div>
+          </div>
+        </div>
+
+        <h3 style="margin:6px 2px 12px;font-size:16px;color:var(--ink-2)">各模块速览</h3>
+        <div class="glance" id="glance"></div>
+
+        <div class="sec" style="margin-top:18px">
+          <h3>数据管理 <span class="sub">本地存储 · 输入即保存</span></h3>
+          <div class="row">
+            <button class="btn ghost sm" id="btnImport2">导入恢复（不限条数）</button>
+            <button class="btn ghost sm danger" id="btnClearDemo">清空示例数据</button>
+            <button class="btn ghost sm danger" id="btnWipe">清空全部数据</button>
+          </div>
+          <p class="small muted" style="margin:12px 0 0">提示：存储失败或数据损坏时，页面顶部会出现明确提示并提供恢复入口。</p>
+        </div>
+      </section>
+
+      <!-- ============ FINANCE ============ -->
+      <section class="view" id="view-finance">
+        <div class="page-head"><h2>记账理财</h2><p>科目先粗后细 · 预算只盯占比前三 · 月底和上月比一比</p></div>
+
+        <div class="sec">
+          <h3>记一笔</h3>
+          <div class="row" style="align-items:flex-end">
+            <div class="field" style="flex:0 0 130px;margin:0"><label class="fld">日期</label><input type="date" id="finDate"></div>
+            <div class="field" style="flex:0 0 120px;margin:0"><label class="fld">类型</label>
+              <select id="finType"><option value="out">支出</option><option value="in">收入</option></select></div>
+            <div class="field" style="flex:0 0 150px;margin:0"><label class="fld">科目</label><select id="finCategory"></select></div>
+            <div class="field" style="flex:1 1 140px;margin:0"><label class="fld">金额 ¥</label><input type="number" id="finAmount" inputmode="decimal" placeholder="0.00" step="0.01"></div>
+            <div class="field" style="flex:1 1 160px;margin:0"><label class="fld">备注</label><input type="text" id="finNote" placeholder="一句话，如 午饭"></div>
+            <button class="btn" id="btnFinAdd" style="flex:0 0 auto">保存</button>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="sec">
+            <h3>本月预算 <span class="sub">仅盯占比前三科目</span></h3>
+            <div id="finBudget"></div>
+            <div class="hr"></div>
+            <h3 style="font-size:14px">设置科目预算 (¥/月)</h3>
+            <div id="finBudgetSet"></div>
+          </div>
+          <div class="sec">
+            <h3>月度对比 <span class="sub">本月 vs 上月</span></h3>
+            <div id="finMonthCompare"></div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="sec">
+            <h3>消费结构 <span class="sub">本月支出占比</span></h3>
+            <div id="finStructure"></div>
+          </div>
+          <div class="sec">
+            <h3>本月一览</h3>
+            <div class="grid3" id="finSummary" style="margin-bottom:14px"></div>
+            <div class="row" style="align-items:center">
+              <div class="field" style="margin:0;flex:1"><label class="fld">分类筛选</label>
+                <select id="finFilter"><option value="">全部</option></select></div>
+              <button class="btn ghost sm" id="btnFinExcel">导出 Excel</button>
+            </div>
+            <div id="finList" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ MEDICAL ============ -->
+      <section class="view" id="view-medical">
+        <div class="page-head"><h2>医院就诊记录</h2><p>就诊流水 · 当前用药 · 检验报告客观判定（按参考范围标注偏低 / 正常 / 偏高）</p></div>
+
+        <div class="sec">
+          <h3>就诊流水</h3>
+          <div class="row" style="align-items:flex-end">
+            <div class="field" style="flex:0 0 130px;margin:0"><label class="fld">日期</label><input type="date" id="medDate"></div>
+            <div class="field" style="flex:1 1 160px;margin:0"><label class="fld">医院</label><input type="text" id="medHospital" placeholder="松江中心医院"></div>
+            <div class="field" style="flex:0 0 130px;margin:0"><label class="fld">科室</label><input type="text" id="medDept" placeholder="风湿免疫科"></div>
+            <div class="field" style="flex:0 0 110px;margin:0"><label class="fld">医生</label><input type="text" id="medDoctor" placeholder="陆翠"></div>
+          </div>
+          <div class="row" style="align-items:flex-end;margin-top:8px">
+            <div class="field" style="flex:1 1 200px;margin:0"><label class="fld">诊断</label><input type="text" id="medDiag" placeholder="类风关"></div>
+            <div class="field" style="flex:1 1 300px;margin:0"><label class="fld">复查日 <span class="small muted">可添加多个 · 到点提醒</span></label><div id="medReviewList" class="lab-next-list"></div></div>
+            <button class="btn ghost sm" id="medAddReview" style="flex:0 0 auto;align-self:flex-end">+ 添加复查日</button>
+          </div>
+          <div class="row" style="align-items:flex-end;margin-top:8px">
+            <div class="field" style="flex:0 0 150px;margin:0"><label class="fld">自费现金 (¥)</label><input type="number" min="0" step="0.01" id="medCash" placeholder="选填"></div>
+            <div class="field" style="flex:1 1 100%;margin:0"><label class="fld">备注</label><input type="text" id="medNote" placeholder="选填"></div>
+            <button class="btn" id="btnMedAdd" style="flex:0 0 auto">保存就诊</button>
+          </div>
+          <div id="medVisitList" style="margin-top:14px"></div>
+        </div>
+
+        <div class="sec">
+          <h3>当前用药</h3>
+          <div class="row" style="align-items:flex-end">
+            <div class="field" style="flex:1 1 130px;margin:0"><label class="fld">药名</label><input type="text" id="medName" placeholder="如 阿莫西林"></div>
+            <div class="field" style="flex:1 1 100px;margin:0"><label class="fld">剂量</label><input type="text" id="medDose" placeholder="如 0.5g"></div>
+            <div class="field" style="flex:1 1 110px;margin:0"><label class="fld">频次</label><input type="text" id="medFreq" placeholder="如 每日2次"></div>
+            <button class="btn" id="btnMedAdd2" style="flex:0 0 auto">添加</button>
+          </div>
+          <div id="medMedsList" style="margin-top:12px"></div>
+          <p class="small muted" style="margin:10px 0 0">用药调整请遵医嘱，本工具仅作记录。</p>
+        </div>
+
+        <div class="sec">
+          <h3>检验记录 <span class="sub">同名指标只显示最新，历次结果倒序可查 · 支持数值 / 阴阳性</span></h3>
+
+          <h4 class="lab-sub" id="labFormTitle">指标明细</h4>
+          <div class="row" style="align-items:flex-end">
+            <button class="btn ghost sm" id="labTpl" style="flex:0 0 auto;align-self:flex-end">常用模板</button>
+          </div>
+          <div id="labTplPanel" class="lab-tpl" hidden></div>
+          <div id="labItems" class="lab-items" style="margin-top:10px"></div>
+          <div class="row" style="margin-top:8px;align-items:center">
+            <button class="btn ghost sm" id="labCopyBtn">复制历史指标</button>
+            <button class="btn ghost sm" id="labAddItem">+ 添加指标</button>
+            <button class="btn ghost sm" id="labCancelEdit" style="flex:0 0 auto;display:none">取消修改</button>
+            <button class="btn" id="labSave" style="flex:0 0 auto;margin-left:auto">保存记录</button>
+          </div>
+          <div id="labCopyPanel" class="lab-tpl" hidden style="margin-top:8px"></div>
+          <p class="small muted" style="margin:8px 0 0">每行可切换「数值 / 定性」：数值填参考范围（低值–高值）自动判定偏低 / 正常 / 偏高；定性（如 阴性 / 阳性）只填结果文本，无需范围。点「复制历史指标」可一键带入既往指标的名称、参考值、上次结果，改下数值和检测日即可再存一条。</p>
+
+          <div id="labList" style="margin-top:14px"></div>
+        </div>
+      </section>
+
+      <!-- ============ PERIOD ============ -->
+      <section class="view" id="view-period">
+        <div class="page-head"><h2>经期管理</h2><p>每次只记开始日 · 年历一眼看清每月几号来</p></div>
+
+        <div class="sec">
+          <h3 id="perFormTitle">记录当前最近的经期</h3>
+          <p class="sub" style="margin:0 0 10px">只记来经第一天即可，系统会按「每月同号」给你温馨提醒（如 9.16 来 → 10.16 提醒注意饮食）。保存后记录会自动按月分行显示在下方年历里，可在年历中直接编辑或删除。</p>
+          <div class="row" style="align-items:flex-end">
+            <div class="field" style="flex:1 1 150px;margin:0"><label class="fld">开始日（必填）</label><input type="date" id="perStart"></div>
+            <button class="btn" id="btnPerAdd" style="flex:0 0 auto">保存</button>
+          </div>
+          <div class="field" style="margin-top:8px"><label class="fld">备注（可选）</label><input type="text" id="perNote" placeholder="如 量偏多 / 痛经"></div>
+          <div id="perEditHint" class="muted small" style="display:none;margin-top:8px">修改模式中：改完点「更新」即覆盖原记录。<button class="btn sm ghost" id="btnPerCancel" type="button" style="margin-left:8px">取消</button></div>
+        </div>
+
+        <div class="sec">
+          <h3>年历 · 记录一览 <span class="sub">按月份分行显示每一次记录</span></h3>
+          <div class="row" style="align-items:center;gap:10px;margin-bottom:12px">
+            <button class="btn sm" id="perYearPrev">‹ 上一年</button>
+            <span id="perYearLabel" style="font-weight:600;min-width:90px;text-align:center"></span>
+            <button class="btn sm" id="perYearNext">下一年 ›</button>
+            <button class="btn ghost sm" id="perYearNow" style="margin-left:auto">回到今年</button>
+          </div>
+          <div id="perYearCal" class="year-cal"></div>
+          <div class="legend">
+            <span><i style="background:#fbe3ec"></i>经期开始日</span>
+            <span><i style="background:#e3f6ea;border:1px solid #bfe6cb"></i>预计来经日（绿色提醒）</span>
+            <span>月份按倒序（当前月在前）排列，点「编辑」可修改</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ TRIP ============ -->
+      <section class="view" id="view-trip">
+        <div class="page-head"><h2>行程统筹</h2><p>记下重要安排 · 临近与逾期一眼可见</p></div>
+
+        <div class="grid2">
+          <div class="sec">
+            <h3>添加行程</h3>
+            <div class="row" style="align-items:flex-end">
+              <div class="field" style="flex:1 1 140px;margin:0"><label class="fld">标题</label><input type="text" id="tripTitle" placeholder="如 牙医预约"></div>
+              <div class="field" style="flex:0 0 140px;margin:0"><label class="fld">日期</label><input type="date" id="tripDate"></div>
+              <div class="field" style="flex:0 0 110px;margin:0"><label class="fld">时间</label><input type="time" id="tripTime"></div>
+            </div>
+            <div class="row" style="align-items:flex-end;margin-top:8px">
+              <div class="field" style="flex:1 1 160px;margin:0"><label class="fld">地点</label><input type="text" id="tripPlace" placeholder="选填"></div>
+              <div class="field" style="flex:1 1 200px;margin:0"><label class="fld">备注</label><input type="text" id="tripNote" placeholder="选填"></div>
+            </div>
+            <label class="row" style="align-items:center;margin-top:10px;font-size:13.5px;color:var(--ink-2)"><input type="checkbox" id="tripRemind" checked style="width:auto;margin-right:8px">纳入首页「近期提醒」</label>
+            <div class="row" style="margin-top:12px;gap:10px">
+              <button class="btn" id="tripAdd" style="flex:1">添加</button>
+              <button class="btn ghost" id="tripCancelEdit" style="display:none">取消编辑</button>
+            </div>
+            <div id="tripEditHint" class="small muted" style="margin-top:8px;display:none"></div>
+          </div>
+          <div class="sec">
+            <h3>近期提醒 <span class="sub">即将到来 · 逾期标红</span></h3>
+            <div id="tripSoon"></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <h3>全部行程</h3>
+          <div id="tripList"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- mobile tabbar -->
+<nav class="tabbar" id="tabbar">
+  <button data-view="dashboard" class="active">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>概览</button>
+  <button data-view="finance">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.4"/><path d="M6 9v6M18 9v6"/></svg>记账</button>
+  <button data-view="medical">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 4v16M4 12h16"/><circle cx="12" cy="12" r="9"/></svg>就诊</button>
+  <button data-view="period">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3a6 6 0 1 0 7 7"/><path d="M14 3A6 6 0 0 0 8 9a6 6 0 0 0 6 6"/><path d="M14 3v6h-6"/></svg>经期</button>
+  <button data-view="trip">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>行程</button>
+</nav>
+
+<div class="banner" id="banner" style="display:none"></div>
+<div class="toast" id="toast"></div>
+
+<!-- install-to-phone hint (Huawei) -->
+<div id="installHint" role="button" tabindex="0">
+  <span>📱 把它装到手机主屏幕</span><span class="x">✕</span>
+</div>
+<div class="modal-mask" id="installSteps">
+  <div class="modal">
+    <h3>装到华为手机主屏幕</h3>
+    <p class="small muted">数据全程存在你手机本地浏览器，不上传、不外泄。</p>
+    <ol>
+      <li>把 <b>life-workspace.html</b> 传到手机：华为分享 / USB / 微信「文件传输助手」/ 邮箱附件 / 百度网盘 都可以。</li>
+      <li>在手机上用 <b>华为浏览器</b> 打开它：文件管理找到文件 → 更多 → 用浏览器打开；或在华为浏览器里直接打开本地文件。</li>
+      <li>点浏览器右下角「菜单」（⋮ 或 ≡）→ 选 <b>「添加到主屏幕」</b> → 起个名字（如「生活台」）→ 确定。</li>
+      <li>回到桌面就有图标了，点开即全屏使用，和 APP 一样，数据自动保存在手机里。</li>
+    </ol>
+    <p class="warn">⚠️ 一定要用「华为浏览器」打开再添加；用微信 / QQ 内置浏览器打开无法加到主屏幕。</p>
+    <div class="acts">
+      <label class="row" style="align-items:center;font-size:13px;color:var(--ink-2)"><input type="checkbox" id="installNoMore" style="width:auto;margin-right:6px">不再提示</label>
+      <button class="btn" id="installStepsClose">知道啦</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="recoveryMask">
+  <div class="modal">
+    <h3>⚠️ 数据读取异常</h3>
+    <p id="recoveryMsg">部分本地数据已损坏，无法解析。你的数据仍在浏览器中，可导出损坏备份交由技术支持，或清除后恢复出厂示例。</p>
+    <div class="acts">
+      <button class="btn" id="btnExportCorrupt">导出损坏备份</button>
+      <button class="btn ghost danger" id="btnResetDemo">清除并恢复示例</button>
+      <button class="btn ghost" id="btnKeepReadable">保留可读部分</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ===== 生活工作台 · 单文件 / 零外链 / localStorage ===== */
+const PREFIX = "wb_life_";
+const KEYS = {
+  finance:   PREFIX+"finance",
+  budget:    PREFIX+"budget",
+  medVisits: PREFIX+"med_visits",
+  medMeds:   PREFIX+"med_meds",
+  medLabs:   PREFIX+"med_labs",
+  medTpls:   PREFIX+"med_tpls",
+  period:    PREFIX+"period",
+  trip:      PREFIX+"trip",
+  settings:  PREFIX+"settings",
+  cleared:   PREFIX+"demo_cleared"
+};
+const OUT_CATS = ["食","行","住","通讯","日用","社交","医疗","其他"];
+const IN_CATS  = ["工资","兼职","理财","其他"];
+const FLOW_OPT = ["少","中","多"];
+
+/* ---------- storage layer ---------- */
+let storageOk = true;
+let corruptRaw = null;
+function lsGet(k){
+  try{ return localStorage.getItem(k); }catch(e){ storageFail(); return null; }
+}
+function lsSet(k,v){
+  try{ localStorage.setItem(k,v); return true; }catch(e){ storageFail(); return false; }
+}
+function storageFail(){
+  storageOk = false;
+  const d = document.getElementById("storeDot"), t = document.getElementById("storeTxt");
+  if(d){ d.className="store-dot bad"; t.textContent="存储失败"; }
+}
+function showBanner(text, kind, actionText, actionFn){
+  const b = document.getElementById("banner");
+  b.className = "banner" + (kind? " "+kind : "");
+  b.innerHTML = "";
+  const span = document.createElement("span"); span.textContent = text; b.appendChild(span);
+  if(actionText){
+    const a = document.createElement("button"); a.textContent = actionText;
+    a.onclick = ()=>{ b.style.display="none"; if(actionFn) actionFn(); };
+    b.appendChild(a);
+  }
+  b.style.display = "flex";
+}
+function hideBanner(){ document.getElementById("banner").style.display="none"; }
+function toast(msg){
+  const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1800);
+}
+
+/* safe parse */
+function parseOrNull(raw){
+  if(raw===null||raw===undefined) return null;
+  try{ return JSON.parse(raw); }catch(e){ return undefined; } // undefined = corrupt
+}
+function loadArr(k){ const r = lsGet(k); const p = parseOrNull(r); if(p===undefined){ markCorrupt(); return []; } return Array.isArray(p)?p:[]; }
+function loadObj(k, def){ const r = lsGet(k); const p = parseOrNull(r); if(p===undefined){ markCorrupt(); return def; } return (p&&typeof p==="object")?p:def; }
+function markCorrupt(){ if(!corruptRaw) corruptRaw = {}; }
+
+/* ---------- state ---------- */
+let S = {};
+function loadState(){
+  S.finance   = loadArr(KEYS.finance);
+  S.budget    = loadObj(KEYS.budget, {});
+  S.medVisits = loadArr(KEYS.medVisits);
+  S.medMeds   = loadArr(KEYS.medMeds);
+  S.medLabs   = loadArr(KEYS.medLabs);
+  /* 常用模板：首次（从未存过）给一套默认模板，之后完全按用户自己的定义来 */
+  S.medTpls   = (lsGet(KEYS.medTpls)===null) ? defaultMedTpls() : loadArr(KEYS.medTpls);
+  S.period    = loadArr(KEYS.period).map(p=>({id:p.id||uid(), start:p.start, note:p.note||""}));
+  S.trip      = loadArr(KEYS.trip);
+  S.settings  = loadObj(KEYS.settings, {addCount:0, cleared:false});
+}
+function persist(){
+  let ok = true;
+  ok = lsSet(KEYS.finance, JSON.stringify(S.finance)) && ok;
+  ok = lsSet(KEYS.budget, JSON.stringify(S.budget)) && ok;
+  ok = lsSet(KEYS.medVisits, JSON.stringify(S.medVisits)) && ok;
+  ok = lsSet(KEYS.medMeds, JSON.stringify(S.medMeds)) && ok;
+  ok = lsSet(KEYS.medLabs, JSON.stringify(S.medLabs)) && ok;
+  ok = lsSet(KEYS.medTpls, JSON.stringify(S.medTpls||[])) && ok;
+  ok = lsSet(KEYS.period, JSON.stringify(S.period)) && ok;
+  ok = lsSet(KEYS.trip, JSON.stringify(S.trip)) && ok;
+  ok = lsSet(KEYS.settings, JSON.stringify(S.settings)) && ok;
+  if(!storageOk) showBanner("本地存储不可用，数据可能无法保存，请检查浏览器设置", "bad", "知道了", hideBanner);
+  return ok;
+}
+
+/* ---------- date helpers ---------- */
+function ymd(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0"); return y+"-"+m+"-"+day; }
+function todayStr(){ return ymd(new Date()); }
+function parseD(s){ const p=s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+function addDays(s,n){ const d=parseD(s); d.setDate(d.getDate()+n); return ymd(d); }
+function diffDays(a,b){ return Math.round((parseD(a)-parseD(b))/86400000); }
+function lastN(n){ const t=todayStr(), arr=[]; for(let i=n-1;i>=0;i--) arr.push(addDays(t,-i)); return arr; }
+function monthOf(s){ return s.slice(0,7); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ---------- demo data ---------- */
+function demoData(){
+  const t = todayStr();
+  const fin = [
+    {id:uid(), _demo:true, date:addDays(t,-2), type:"out", amount:38.5, category:"食", note:"午饭"},
+    {id:uid(), _demo:true, date:addDays(t,-1), type:"out", amount:12, category:"行", note:"地铁"},
+    {id:uid(), _demo:true, date:t, type:"out", amount:65, category:"食", note:"聚餐"},
+    {id:uid(), _demo:true, date:addDays(t,-1), type:"in", amount:8000, category:"工资", note:"月薪"},
+    {id:uid(), _demo:true, date:addDays(t,-33), type:"out", amount:120, category:"日用", note:"超市"}
+  ];
+  const budget = { "食":900, "行":300, "日用":600 };
+  const meds = [{id:uid(), _demo:true, name:"维生素D", dose:"400IU", freq:"每日1次", note:""}];
+  const visits = [{id:uid(), _demo:true, date:addDays(t,-10), hospital:"松江中心医院", dept:"风湿免疫科", doctor:"陆翠", diag:"类风关", review:[addDays(t,3)], cash:320, note:"带既往检查"}];
+  const labs = [{id:uid(), _demo:true, date:addDays(t,-5), items:[
+    {name:"白细胞", value:11.2, unit:"10^9/L", low:4, high:10, note:""},
+    {name:"血红蛋白", value:118, unit:"g/L", low:115, high:150, note:""},
+    {name:"血小板", value:240, unit:"10^9/L", low:125, high:350, note:""},
+    {name:"抗CCP抗体", type:"qual", value:"阳性", note:""},
+    {name:"类风湿因子 RF", type:"qual", value:"阴性", note:""}
+  ], note:"复查后带报告"}];
+  const period = [
+    {id:uid(), _demo:true, start:addDays(t,-31), pain:2, note:"规律"},
+    {id:uid(), _demo:true, start:addDays(t,-3), pain:1, note:""}
+  ];
+  const trip = [
+    {id:uid(), _demo:true, title:"牙医预约", date:addDays(t,2), time:"10:00", place:"口腔医院", remind:true, note:"洗牙", done:false},
+    {id:uid(), _demo:true, title:"提交季度报告", date:addDays(t,5), time:"18:00", place:"", remind:true, note:"", done:false}
+  ];
+  return {finance:fin, budget:budget, medVisits:visits, medMeds:meds, medLabs:labs,
+    period:period, trip:trip, settings:{addCount:0, cleared:false}};
+}
+function ensureDemo(){
+  if(lsGet(KEYS.cleared)==="1") return; // user cleared demo before
+  // only seed if everything empty
+  if(S.finance.length||S.medVisits.length||S.medMeds.length||S.medLabs.length||S.period.length||S.trip.length) return;
+  const d = demoData();
+  d.medTpls = (S.medTpls && S.medTpls.length) ? S.medTpls : defaultMedTpls();
+  S = d;
+  persist();
+}
+
+/* 新增时不再强制提醒导出；存储空间不足时由 storageFail 单独提示 */
+function bumpAdd(){}
+
+/* ================= compute layer ================= */
+function finMonthTotals(month){
+  let out=0, inn=0;
+  S.finance.forEach(f=>{ if(monthOf(f.date)===month){ if(f.type==="out") out+=+f.amount; else inn+=+f.amount; } });
+  return {out, inn};
+}
+function finByCat(month){
+  const m={};
+  S.finance.forEach(f=>{ if(f.type==="out"&&monthOf(f.date)===month){ m[f.category]=(m[f.category]||0)+(+f.amount); } });
+  return m;
+}
+function thisMonth(){ return monthOf(todayStr()); }
+function prevMonth(){ return monthOf(addDays(thisMonth()+"-01",-1)); }
+
+/* period compute — 仅起始日，统计间隔规律 */
+function periodList(){ return S.period.slice().sort((a,b)=>a.start<b.start?-1:1); }
+function periodIntervals(){
+  const l = periodList(); const arr=[];
+  for(let i=1;i<l.length;i++) arr.push({from:l[i-1].start, to:l[i].start, days:Math.max(0,diffDays(l[i].start,l[i-1].start))});
+  return arr;
+}
+function periodStats(){
+  const l = periodList();
+  if(!l.length) return null;
+  const iv = periodIntervals().map(x=>x.days).filter(d=>d>0);
+  const avg = iv.length? Math.round(iv.reduce((a,b)=>a+b,0)/iv.length):null;
+  const min = iv.length? Math.min(...iv):null;
+  const max = iv.length? Math.max(...iv):null;
+  return {count:l.length, avg, min, max, last:l[l.length-1]};
+}
+/* 经期每月同号提醒：锚定最近一次来经日，推算之后每个同号日，取最近的（>=今天-3）作为提醒日 */
+function periodReminderDate(){
+  const pl=periodList(); if(!pl.length) return null;
+  const last=pl[pl.length-1];
+  const parts=last.start.split("-"); if(parts.length!==3) return null;
+  const y=+parts[0], m=+parts[1], d=+parts[2];
+  for(let k=1;k<=36;k++){
+    const dt=new Date(y,(m-1)+k,d); const ds=ymd(dt);
+    if(diffDays(ds, todayStr())>=-3) return ds;
+  }
+  return null;
+}
+
+/* dashboard compute */
+/* 每日一句：情绪调节与控制的心灵鸡汤（按日期确定性选取，同一天同一句） */
+const DAILY_QUOTES = [
+  "情绪上来的时候，先停三秒再开口——稳住的这三秒，往往决定了一整天的质量。",
+  "把情绪和工作分开：事情归事情，感受归感受，别让一时的心情替你做决定。",
+  "你不是情绪的奴隶，也别做它的俘虏——看着它来，看着它走，手里的活照常做。",
+  "生气时不急着回消息，等心跳平下来，你会发现大多数话其实不必说。",
+  "真正的成熟，是心里翻江倒海，表面上还能把事一件件做完。",
+  "别人激怒你，是递给你一根绳子；接不接、怎么用，决定权在你手里。",
+  "焦虑来了，先把它写下来：哪些是事实，哪些只是你想多了。分开之后，它就小了。",
+  "今天若诸事不顺，至少守住一件事：不让坏情绪搭上今晚的睡眠。",
+  "情绪像风，会吹过你，却吹不倒一棵站稳的树。先站稳，再行事。",
+  "把“我好烦”换成“我现在需要处理一件事”——说法一变，掌控感就回来了。",
+  "别人怎么想，是他们的事；你怎么做，是你自己的事。分清边界，心就静了。",
+  "深呼吸三次，不是逃避，是给理智一点时间追上冲动。",
+  "与其反复想“他为什么这样对我”，不如想“我接下来怎么把这件事收尾”。",
+  "控制情绪不是压抑，而是选择在什么时间、用什么方式表达。",
+  "工作受挫时，把注意力拉回手边能做的那一步，情绪会跟着动作慢下来。",
+  "你没法控制发生什么，但可以控制自己怎么回应。回应稳了，局面就稳了。",
+  "别在情绪最高点做决定，也别在最低点否定自己——留到平静时再说。",
+  "把期待调低一点，对自己温柔一点，内耗少了，掌控感自然就回来。",
+  "委屈不必立刻反驳，先把手头的事做完；清明的头脑比一时的输赢更值钱。",
+  "真正的强大，是心里有波澜，脚下却依然走得稳。"
+];
+function renderDailyQuote(){
+  const t = todayStr();
+  const dayNum = Math.floor(Date.parse(t)/86400000);
+  const idx = ((dayNum % DAILY_QUOTES.length) + DAILY_QUOTES.length) % DAILY_QUOTES.length;
+  document.getElementById("dailyQuote").textContent = "“"+DAILY_QUOTES[idx]+"”";
+  document.getElementById("quoteSub").textContent = "— 每日一句 · 情绪调节";
+}
+
+/* ================= render layer ================= */
+function renderDashboard(){
+  renderDailyQuote();
+  // greeting
+  const h=new Date().getHours();
+  const greet = h<6?"夜深了":h<11?"早安":h<14?"午安":h<18?"下午好":"晚上好";
+  document.getElementById("greetText").textContent = greet;
+  document.getElementById("topDate").textContent = todayStr()+" · "+["日","一","二","三","四","五","六"][new Date().getDay()];
+  // glance
+  const mt = finMonthTotals(thisMonth());
+  // 就诊：最近一次就诊 + 接下去的复查
+  const visitsSorted = S.medVisits.slice().sort((a,b)=> a.date<b.date?1:-1);
+  const lastVisit = visitsSorted[0] || null;
+  let nextRev = null;
+  S.medVisits.forEach(v=>{
+    (v.review||[]).filter(Boolean).forEach(rd=>{
+      const du = diffDays(rd, todayStr()); // >=0 表示今天或未来
+      if(du >= 0){ if(!nextRev || du < nextRev.du) nextRev = {date:rd, du, v}; }
+    });
+  });
+  let medBody;
+  if(lastVisit){
+    const ld = lastVisit.date.slice(5).replace("-","月")+"日";
+    let info = "";
+    if(lastVisit.hospital) info += esc(lastVisit.hospital);
+    if(lastVisit.dept) info += (info?" · ":"")+esc(lastVisit.dept);
+    if(lastVisit.doctor) info += (info?" · ":"")+esc(lastVisit.doctor);
+    let diagLine = lastVisit.diag ? ('<div class="d">诊断 '+esc(lastVisit.diag)+(lastVisit.note?' · '+esc(lastVisit.note):'')+'</div>') : '';
+    let revLine;
+    if(nextRev){
+      const rmd = nextRev.date.slice(5).replace("-","月")+"日";
+      revLine = '<div class="d hl'+(nextRev.du===0?' now':'')+'">'+(nextRev.du===0?"今天复查":("下次复查 "+rmd+" · 还有 "+nextRev.du+" 天"))+'</div>';
+    } else {
+      revLine = '<div class="d muted">暂无复查安排</div>';
+    }
+    medBody = '<div class="v">最近 '+ld+'</div><div class="d">'+(info||"—")+'</div>'+diagLine+revLine;
+  } else {
+    medBody = '<div class="v">暂无就诊</div><div class="d muted">记录就诊后显示最近与复查</div>';
+  }
+  // 经期：上次经期 + 预测经期
+  const plArr = periodList();
+  let perBody;
+  if(plArr.length){
+    const last = plArr[plArr.length-1];
+    const since = diffDays(todayStr(), last.start);
+    const lmd = last.start.slice(5).replace("-","月")+"日";
+    const pred = periodReminderDate();
+    let predLine;
+    if(pred){
+      const pmd = pred.slice(5).replace("-","月")+"日";
+      const pdd = diffDays(pred, todayStr());
+      predLine = '<div class="d hl">预计 '+pmd+(pdd>=0?(' · 还有 '+pdd+' 天'):'')+'</div>';
+      if(pdd>=0 && pdd<=3) predLine += '<div class="d warn">临近 · 注意温饮少生冷、备好卫生用品</div>';
+    } else {
+      predLine = '<div class="d muted">暂无法预测</div>';
+    }
+    perBody = '<div class="v">上次 '+lmd+'</div><div class="d">'+(since>=0?(since+' 天前'):'即将到来')+'</div>'+predLine;
+  } else {
+    perBody = '<div class="v">待记录</div><div class="d muted">记录后显示上次与预测</div>';
+  }
+  let tripBody;
+  const upTrips = upcomingTrips();
+  if(upTrips.length){
+    const nx = upTrips[0]; const dd = diffDays(nx.date, todayStr());
+    tripBody = '<div class="v">'+esc(nx.title)+'</div><div class="d">'+(dd===0?"今天":(dd>0?("还有 "+dd+" 天"):"已逾期"))+' · '+nx.date+(nx.place?(' · '+esc(nx.place)):'')+'</div>';
+  } else {
+    tripBody = '<div class="v">暂无行程</div><div class="d muted">安排后显示下一步</div>';
+  }
+  const glance = [
+    {k:"记账·本月支出", v:"¥"+mt.out.toFixed(0), d:"收入 ¥"+mt.inn.toFixed(0), gc:"var(--c-fin)"},
+    {k:"就诊", body: medBody, gc:"var(--c-med)"},
+    {k:"经期", body: perBody, gc:"var(--c-per)"},
+    {k:"行程", body: tripBody, gc:"var(--c-trip)"}
+  ];
+  document.getElementById("glance").innerHTML = glance.map(c=>
+    '<div class="gl" style="--gc:'+c.gc+'"><div class="k">'+esc(c.k)+'</div>'+(c.body||('<div class="v">'+esc(c.v)+'</div><div class="d">'+esc(c.d)+'</div>'))+'</div>').join("");
+}
+
+/* finance */
+function fillFinCategory(){
+  const sel = document.getElementById("finCategory");
+  const type = document.getElementById("finType").value;
+  const cats = type==="out"?OUT_CATS:IN_CATS;
+  sel.innerHTML = cats.map(c=>'<option>'+c+'</option>').join("");
+}
+function renderFinance(){
+  fillFinCategory();
+  // budget progress (top-3 spending cats this month)
+  const byCat = finByCat(thisMonth());
+  const top = Object.keys(byCat).sort((a,b)=>byCat[b]-byCat[a]).slice(0,3);
+  const bd = document.getElementById("finBudget");
+  if(!top.length){ bd.innerHTML='<div class="empty">本月暂无支出，记一笔后这里会显示预算进度。</div>'; }
+  else bd.innerHTML = top.map(c=>{
+    const bud = S.budget[c]||0, spent = byCat[c]||0;
+    const pct = bud>0?Math.min(100, spent/bud*100):0;
+    const left = bud-spent;
+    const col = bud<=0?"var(--muted)":(left<0?"var(--danger)":"var(--in)");
+    return '<div style="margin-bottom:12px"><div class="row" style="justify-content:space-between;font-size:13.5px"><span>'+esc(c)+'</span>'+
+      '<span class="muted">'+(bud>0?('¥'+spent.toFixed(0)+' / ¥'+bud):('¥'+spent.toFixed(0)))+'</span></div>'+
+      '<div class="bar" style="margin-top:5px"><i style="width:'+pct+'%;background:'+col+'"></i></div>'+
+      (bud>0?'<div class="small '+(left<0?'neg':'muted')+'" style="margin-top:3px">'+(left<0?('已超 ¥'+(-left).toFixed(0)):('剩余 ¥'+left.toFixed(0)))+'</div>':'')+'</div>';
+  }).join("");
+  // budget set
+  const bs = document.getElementById("finBudgetSet");
+  bs.innerHTML = OUT_CATS.slice(0,5).map(c=>
+    '<div class="row" style="align-items:center;margin-bottom:7px"><span style="flex:0 0 60px;font-size:13.5px">'+c+'</span>'+
+    '<input type="number" id="bud_'+c+'" value="'+(S.budget[c]||"")+'" placeholder="不设" style="flex:1" inputmode="decimal">'+
+    '<span class="muted small" style="flex:0 0 24px;text-align:right">¥</span></div>').join("")+
+    '<button class="btn sm" id="btnBudSave">保存预算</button>';
+  document.getElementById("btnBudSave").onclick = ()=>{
+    OUT_CATS.slice(0,5).forEach(c=>{ const v=parseFloat(document.getElementById("bud_"+c).value); if(v>0) S.budget[c]=v; else delete S.budget[c]; });
+    persist(); renderFinance(); toast("预算已保存");
+  };
+  // month compare
+  const cur = finMonthTotals(thisMonth()), prev = finMonthTotals(prevMonth());
+  document.getElementById("finMonthCompare").innerHTML =
+    cmpBar("本月支出", cur.out, Math.max(cur.out,prev.out,1),"var(--out)") +
+    cmpBar("上月支出", prev.out, Math.max(cur.out,prev.out,1),"var(--muted)") +
+    cmpBar("本月收入", cur.inn, Math.max(cur.inn,prev.inn,1),"var(--in)") +
+    '<div class="small muted" style="margin-top:8px">环比支出：'+
+      (prev.out>0?((cur.out-prev.out)/prev.out*100).toFixed(0):"—")+'% · 结余 ¥'+(cur.inn-cur.out).toFixed(0)+'</div>';
+  // structure pie
+  renderPie(document.getElementById("finStructure"), byCat);
+  // summary
+  document.getElementById("finSummary").innerHTML =
+    card3("支出", "¥"+cur.out.toFixed(0)) + card3("收入", "¥"+cur.inn.toFixed(0)) + card3("结余", "¥"+(cur.inn-cur.out).toFixed(0));
+  // filter
+  const fl = document.getElementById("finFilter");
+  const catsAll = Array.from(new Set(S.finance.map(f=>f.category)));
+  fl.innerHTML = '<option value="">全部</option>'+catsAll.map(c=>'<option>'+esc(c)+'</option>').join("");
+  if(!fl.dataset.bound){ fl.onchange=()=>renderFinList(); fl.dataset.bound="1"; }
+  renderFinList();
+}
+function card3(k,v){ return '<div style="text-align:center"><div class="stat-lbl">'+k+'</div><div class="stat-num">'+v+'</div></div>'; }
+function cmpBar(label,val,max,col){
+  const pct = max>0?val/max*100:0;
+  return '<div style="margin-bottom:10px"><div class="row" style="justify-content:space-between;font-size:13px"><span>'+label+'</span><span class="muted">¥'+val.toFixed(0)+'</span></div>'+
+    '<div class="bar" style="margin-top:4px"><i style="width:'+pct+'%;background:'+col+'"></i></div></div>';
+}
+function renderPie(box, byCat){
+  const entries = Object.entries(byCat).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length){ box.innerHTML='<div class="empty">本月暂无支出分类数据。</div>'; return; }
+  const total = entries.reduce((a,b)=>a+b[1],0);
+  const cols=["#b06a4f","#7c8a5a","#9a6b86","#c9883a","#5a8aa0","#bf4a3a","#6b7a8a","#a8895a"];
+  let ang=-Math.PI/2, parts="";
+  entries.forEach((e,i)=>{
+    const a2=ang+e[1]/total*Math.PI*2;
+    const x1=60+48*Math.cos(ang), y1=60+48*Math.sin(ang), x2=60+48*Math.cos(a2), y2=60+48*Math.sin(a2);
+    const large = (a2-ang)>Math.PI?1:0;
+    parts+='<path d="M60 60 L'+x1.toFixed(1)+' '+y1.toFixed(1)+' A48 48 0 '+large+' 1 '+x2.toFixed(1)+' '+y2.toFixed(1)+' Z" fill="'+cols[i%cols.length]+'"/>';
+    ang=a2;
+  });
+  let html='<svg width="140" height="140" viewBox="0 0 120 120" style="float:left;margin-right:14px">'+parts+'<circle cx="60" cy="60" r="26" fill="var(--surface)"/></svg><div style="overflow:hidden">';
+  entries.forEach((e,i)=>{ html+='<div class="row" style="justify-content:space-between;font-size:13px;margin-bottom:5px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:'+cols[i%cols.length]+';margin-right:6px"></i>'+esc(e[0])+'</span><span class="muted">'+(e[1]/total*100).toFixed(0)+'%</span></div>'; });
+  html+='<div class="small muted" style="margin-top:4px">合计 ¥'+total.toFixed(0)+'</div></div><div style="clear:both"></div>';
+  box.innerHTML=html;
+}
+function renderFinList(){
+  const f = document.getElementById("finFilter").value;
+  let arr = S.finance.slice().sort((a,b)=>a.date<b.date?1:-1);
+  if(f) arr = arr.filter(x=>x.category===f);
+  const box = document.getElementById("finList");
+  if(!arr.length){ box.innerHTML='<div class="empty">没有记录。</div>'; return; }
+  box.innerHTML = arr.map(x=>
+    '<div class="list-row"><div class="lr-main"><b>'+esc(x.note||x.category)+'</b>'+
+    '<div class="meta">'+x.date+' · '+esc(x.category)+'</div></div>'+
+    '<div class="lr-amt '+(x.type==="out"?"neg":"pos")+'">'+(x.type==="out"?"-":"+")+'¥'+(+x.amount).toFixed(2)+'</div>'+
+    '<button class="lr-x" data-del="'+x.id+'">删除</button></div>').join("");
+  box.querySelectorAll("[data-del]").forEach(b=> b.onclick=()=>{
+    S.finance = S.finance.filter(x=>x.id!==b.dataset.del); persist(); renderFinance(); toast("已删除");
+  });
+}
+
+/* medical */
+function renderMedical(){
+  const vl = document.getElementById("medVisitList");
+  if(!S.medVisits.length) vl.innerHTML='<div class="empty">还没有就诊记录。</div>';
+  else {
+    const cashSum = S.medVisits.reduce((s,v)=> s+((+v.cash>0)?+v.cash:0),0);
+    vl.innerHTML = S.medVisits.slice().sort((a,b)=>a.date<b.date?1:-1).map(v=>{
+      const rev=(v.review||[]).filter(Boolean);
+      const revHtml = rev.length?('<div class="lab-next-row">复查日'+rev.slice().sort().map(d=>'<span class="lab-next">'+esc(d)+'</span>').join("")+'</div>'):"";
+      const cashHtml = (+v.cash>0)?(' · 自费 ¥'+(+v.cash).toFixed(2)):"";
+      return '<div class="list-row"><div class="lr-main"><b>'+esc(v.diag||"就诊")+'</b>'+
+        '<div class="meta">'+v.date+' · '+esc(v.hospital||"")+(v.dept?(' · '+esc(v.dept)):"")+(v.doctor?(' · '+esc(v.doctor)):"")+cashHtml+(v.note?(' · '+esc(v.note)):"")+'</div>'+revHtml+'</div>'+
+        '<button class="lr-x" data-vdel="'+v.id+'">删除</button></div>';
+    }).join("") + (cashSum>0?'<div class="muted small" style="margin-top:8px">自费现金合计 ¥'+cashSum.toFixed(2)+'</div>':"");
+  }
+  vl.querySelectorAll("[data-vdel]").forEach(b=> b.onclick=()=>{
+    S.medVisits=S.medVisits.filter(x=>x.id!==b.dataset.vdel); persist(); renderMedical(); renderDashboard(); toast("已删除"); });
+  const ml = document.getElementById("medMedsList");
+  if(!S.medMeds.length) ml.innerHTML='<div class="empty">暂无用药记录。</div>';
+  else ml.innerHTML = S.medMeds.map(m=>
+    '<div class="list-row"><div class="lr-main"><b>'+esc(m.name)+'</b>'+
+    '<div class="meta">'+(m.dose?esc(m.dose)+' · ':"")+(m.freq?esc(m.freq):"")+(m.note?(' · '+esc(m.note)):"")+'</div></div>'+
+    '<button class="lr-x" data-mdel="'+m.id+'">移除</button></div>').join("");
+  ml.querySelectorAll("[data-mdel]").forEach(b=> b.onclick=()=>{
+    S.medMeds=S.medMeds.filter(x=>x.id!==b.dataset.mdel); persist(); renderMedical(); renderDashboard(); toast("已移除"); });
+  renderMedLabs();
+  const tp=document.getElementById("labTplPanel"); if(tp && !tp.hidden) renderLabTpl();   /* 模板面板开着时跟随数据刷新 */
+}
+/* 判定指标状态：数值 → 偏低/正常/偏高；定性（阴性/阳性）→ 着色（阳性计为异常，风湿/免疫场景通用） */
+function labStatus(it){
+  if(it.type==='qual'){
+    const v=(it.value||'').trim();
+    if(/阳/.test(v)) return {cls:'high', label:v};   /* 阳性＝异常 */
+    if(/阴/.test(v)) return {cls:'ok',   label:v};   /* 阴性＝正常 */
+    return {cls:'', label:v};                         /* 其它文本仅显示，不计异常 */
+  }
+  const v=parseFloat(it.value), lo=parseFloat(it.low), hi=parseFloat(it.high);
+  if(isNaN(v)) return {cls:'', label:''};
+  if(!isNaN(lo) && v<lo) return {cls:'low',  label:'偏低'};
+  if(!isNaN(hi) && v>hi) return {cls:'high', label:'偏高'};
+  return {cls:'ok', label:'正常'};
+}
+function labJudge(it){ return labStatus(it).cls; }
+/* ---------- 常用模板：用户可自定义（存 S.medTpls） ----------
+   首次使用给一套可编辑/可删除的默认模板；之后完全由你自己定义指标内容。 */
+const MED_TPL_SEED = [
+  {name:"血常规", items:[
+    {name:"白细胞 WBC", low:"3.5", high:"9.5", unit:"×10⁹/L"},
+    {name:"红细胞 RBC", low:"3.8", high:"5.1", unit:"×10¹²/L"},
+    {name:"血红蛋白 HGB", low:"115", high:"150", unit:"g/L"},
+    {name:"血小板 PLT", low:"125", high:"350", unit:"×10⁹/L"}
+  ]},
+  {name:"空腹血糖", items:[{name:"空腹血糖 GLU", low:"3.9", high:"6.1", unit:"mmol/L"}]},
+  {name:"血脂四项", items:[
+    {name:"总胆固醇 TC", low:"0", high:"5.2", unit:"mmol/L"},
+    {name:"甘油三酯 TG", low:"0", high:"1.7", unit:"mmol/L"},
+    {name:"低密度脂蛋白 LDL", low:"0", high:"3.4", unit:"mmol/L"},
+    {name:"高密度脂蛋白 HDL", low:"1.0", high:"2.0", unit:"mmol/L"}
+  ]},
+  {name:"肝功能", items:[
+    {name:"谷丙转氨酶 ALT", low:"7", high:"40", unit:"U/L"},
+    {name:"谷草转氨酶 AST", low:"13", high:"35", unit:"U/L"},
+    {name:"总胆红素 TBIL", low:"3", high:"22", unit:"μmol/L"}
+  ]}
+];
+function defaultMedTpls(){
+  return MED_TPL_SEED.map(t=>({id:uid(), name:t.name,
+    items:t.items.map(x=>({name:x.name, low:x.low, high:x.high, unit:x.unit}))}));
+}
+let tplEditId = null;   /* 正在编辑的模板 id；null 表示新建 */
+let tplDraft  = null;   /* 编辑草稿：{name, items:[{name,low,high,unit}]} */
+function labTplToggle(){
+  const p=document.getElementById("labTplPanel"); if(!p) return;
+  p.hidden = !p.hidden;
+  if(!p.hidden) renderLabTpl();
+}
+function renderLabTpl(){
+  const box=document.getElementById("labTplPanel"); if(!box || box.hidden) return;
+  const list=S.medTpls||[];
+  const chips = list.length ? list.map(t=>
+    '<span class="tpl-chip"><button type="button" class="tpl-use" data-tpluse="'+t.id+'" title="套用到下方指标明细">'+esc(t.name)+'</button>'+
+    '<button type="button" class="tpl-edit" data-tpledit="'+t.id+'" title="编辑这个模板">✎</button>'+
+    '<button type="button" class="tpl-del" data-tpldel="'+t.id+'" title="删除这个模板">×</button></span>'
+  ).join("") : '<span class="small muted">还没有模板，点右侧「+ 新建模板」自己定义一套。</span>';
+  let form="";
+  if(tplDraft){
+    const rows=tplDraft.items.map((it,i)=>
+      '<div class="tpl-row">'+
+        '<input class="tr-name" data-ti="'+i+'" data-tf="name" placeholder="指标名，如 白细胞 WBC" value="'+esc(it.name||"")+'">'+
+        '<input data-ti="'+i+'" data-tf="low" placeholder="低值" value="'+esc(it.low||"")+'">'+
+        '<input data-ti="'+i+'" data-tf="high" placeholder="高值" value="'+esc(it.high||"")+'">'+
+        '<input data-ti="'+i+'" data-tf="unit" placeholder="单位" value="'+esc(it.unit||"")+'">'+
+        '<button type="button" class="li-x" data-tidel="'+i+'" title="移除这一项">×</button>'+
+      '</div>').join("");
+    form='<div class="tpl-form">'+
+      '<div class="tpl-row"><input class="tr-name" id="tplName" placeholder="模板名称，如 我的血常规" value="'+esc(tplDraft.name||"")+'"></div>'+
+      rows+
+      '<div class="tpl-acts"><button type="button" class="btn ghost sm" id="tplAddRow">+ 添加指标</button>'+
+      '<button type="button" class="btn sm" id="tplSave">'+(tplEditId?"保存修改":"新建模板")+'</button>'+
+      '<button type="button" class="btn ghost sm" id="tplCancel">取消</button></div></div>';
+  }
+  box.innerHTML='<p class="tpl-hint">点模板名称即可套用到下方「指标明细」（同名指标只补空缺的参考范围，不覆盖你已填的结果）；✎ 改内容，× 删模板。</p>'+
+    '<div class="tpl-chips">'+chips+'<button type="button" class="btn ghost sm" id="tplNew">+ 新建模板</button></div>'+form;
+  box.querySelectorAll("[data-tpluse]").forEach(b=> b.onclick=()=> applyMedTpl(b.dataset.tpluse));
+  box.querySelectorAll("[data-tpledit]").forEach(b=> b.onclick=()=> labTplStartEdit(b.dataset.tpledit));
+  box.querySelectorAll("[data-tpldel]").forEach(b=> b.onclick=()=>{
+    const id=b.dataset.tpldel; const t=(S.medTpls||[]).find(x=>x.id===id); if(!t) return;
+    if(!confirm("删除模板「"+t.name+"」？不影响已保存的报告。")) return;
+    S.medTpls=S.medTpls.filter(x=>x.id!==id);
+    if(tplEditId===id){ tplEditId=null; tplDraft=null; }
+    persist(); renderLabTpl(); toast("模板已删除");
+  });
+  const nb=box.querySelector("#tplNew"); if(nb) nb.onclick=()=> labTplStartNew();
+  if(tplDraft){
+    const nEl=box.querySelector("#tplName");
+    if(nEl) nEl.oninput=()=>{ tplDraft.name=nEl.value; };
+    box.querySelectorAll("[data-tf]").forEach(inp=>{
+      inp.oninput=()=>{ const i=+inp.dataset.ti, f=inp.dataset.tf; tplDraft.items[i][f]=inp.value; };
+    });
+    box.querySelectorAll("[data-tidel]").forEach(b=> b.onclick=()=>{
+      tplDraft.items.splice(+b.dataset.tidel,1);
+      if(!tplDraft.items.length) tplDraft.items.push({name:"",low:"",high:"",unit:""});
+      renderLabTpl();
+    });
+    const ar=box.querySelector("#tplAddRow"); if(ar) ar.onclick=()=>{ tplDraft.items.push({name:"",low:"",high:"",unit:""}); renderLabTpl(); };
+    const sb=box.querySelector("#tplSave"); if(sb) sb.onclick=()=> labTplSave();
+    const cb=box.querySelector("#tplCancel"); if(cb) cb.onclick=()=>{ tplEditId=null; tplDraft=null; renderLabTpl(); };
+  }
+}
+function labTplStartNew(){
+  tplEditId=null; tplDraft={name:"", items:[{name:"",low:"",high:"",unit:""}]}; renderLabTpl();
+}
+function labTplStartEdit(id){
+  const t=(S.medTpls||[]).find(x=>x.id===id); if(!t) return;
+  tplEditId=id;
+  tplDraft={name:t.name||"", items:(t.items||[]).map(x=>({name:x.name||"",low:x.low||"",high:x.high||"",unit:x.unit||""}))};
+  if(!tplDraft.items.length) tplDraft.items.push({name:"",low:"",high:"",unit:""});
+  renderLabTpl();
+}
+function labTplSave(){
+  if(!tplDraft) return;
+  const name=(tplDraft.name||"").trim();
+  const items=tplDraft.items.filter(it=>(it.name||"").trim())
+    .map(it=>({name:it.name.trim(), low:(it.low||"").trim(), high:(it.high||"").trim(), unit:(it.unit||"").trim()}));
+  if(!name){ toast("请先填模板名称"); return; }
+  if(!items.length){ toast("至少填一个指标名"); return; }
+  if(tplEditId){
+    const t=(S.medTpls||[]).find(x=>x.id===tplEditId);
+    if(t){ t.name=name; t.items=items; }
+  } else {
+    if(!S.medTpls) S.medTpls=[];
+    S.medTpls.push({id:uid(), name, items});
+  }
+  persist(); tplEditId=null; tplDraft=null; renderLabTpl(); toast("模板已保存");
+}
+/* 套用模板：把模板指标合并进当前「指标明细」（同名只补空缺，不覆盖已填结果） */
+function applyMedTpl(id){
+  const t=(S.medTpls||[]).find(x=>x.id===id); if(!t) return;
+  let added=0, filled=0;
+  (t.items||[]).forEach(it=>{
+    const ex=curLabItems.find(x=>x.name===it.name);
+    if(ex){
+      if(!ex.low && it.low){ ex.low=it.low; filled++; }
+      if(!ex.high && it.high){ ex.high=it.high; filled++; }
+      if(!ex.unit && it.unit){ ex.unit=it.unit; filled++; }
+      if(!ex.date){ ex.date=todayStr(); }   /* 检测日默认今天，可自行改成实际检测日 */
+    } else {
+      curLabItems.push({name:it.name, value:"", low:it.low||"", high:it.high||"", unit:it.unit||"", note:"", type:"num", date:todayStr()});
+      added++;
+    }
+  });
+  renderLabEditor();
+  toast(added?("已套用「"+t.name+"」：新增 "+added+" 项指标")
+              :(filled?("「"+t.name+"」已存在，补齐了 "+filled+" 处参考值")
+                     :("「"+t.name+"」的指标都已在列表中")));
+}
+function renderLabEditor(){
+  const box=document.getElementById("labItems"); if(!box) return;
+  if(!curLabItems.length){ box.innerHTML='<div class="empty small">还没有添加指标。点「+ 添加指标」或「常用模板」，也可「复制历史指标」。</div>'; return; }
+  const cell=(i,f,ph)=>{
+    const v=curLabItems[i][f]!=null?curLabItems[i][f]:"";
+    const t=(f==="date")?'type="date" ':'';
+    return '<input class="li-'+f+'" '+t+'data-i="'+i+'" data-f="'+f+'" placeholder="'+ph+'" value="'+esc(v)+'">';
+  };
+  box.innerHTML = curLabItems.map((it,i)=>{
+    const isQual=(it.type||"num")==='qual';
+    const typ=(it.type||"num");
+    const valInput = isQual
+      ? '<input class="li-value" list="labQualList" data-i="'+i+'" data-f="value" placeholder="如 阴性 / 阳性" value="'+esc(it.value||"")+'">'
+      : cell(i,"value","结果");
+    return '<div class="lab-row-edit'+(isQual?' type-qual':'')+'">'+
+      '<select class="li-type" data-i="'+i+'">'+
+        '<option value="num"'+(typ==='num'?' selected':'')+'>数值</option>'+
+        '<option value="qual"'+(typ==='qual'?' selected':'')+'>定性</option>'+
+      '</select>'+
+      cell(i,"name","指标名")+valInput+cell(i,"date","检测日")+
+      (isQual?'':cell(i,"low","低值")+cell(i,"high","高值")+cell(i,"unit","单位"))+
+      '<button type="button" class="li-x" data-i="'+i+'">×</button></div>';
+  }).join("") +
+  '<datalist id="labQualList"><option value="阴性"><option value="阳性"><option value="弱阳性"><option value="可疑"><option value="未检出"><option value="±"></datalist>';
+  box.querySelectorAll("input[data-f]").forEach(inp=>{
+    inp.oninput=()=>{ const i=+inp.dataset.i, f=inp.dataset.f; curLabItems[i][f]=inp.value; };
+  });
+  box.querySelectorAll(".li-type").forEach(sel=>{
+    sel.onchange=()=>{ const i=+sel.dataset.i; curLabItems[i].type=sel.value; renderLabEditor(); };
+  });
+  box.querySelectorAll(".li-x").forEach(b=> b.onclick=()=>{ curLabItems.splice(+b.dataset.i,1); renderLabEditor(); });
+}
+/* 复制历史指标：把既往指标的名称 / 参考值 / 上次结果带进来，改下数值和检测日即可再存一条 */
+function collectHistInds(){
+  const map={};
+  S.medLabs.forEach(r=> (r.items||[]).forEach(it=>{
+    if(!it.name) return;
+    const d=it.date||r.date||"";
+    if(!(it.name in map)) map[it.name]={name:it.name, last:it, date:d};
+    else if(d>map[it.name].date){ map[it.name].last=it; map[it.name].date=d; }
+  }));
+  return Object.keys(map).sort((a,b)=>a.localeCompare(b)).map(k=>map[k]);
+}
+function renderLabCopy(){
+  const box=document.getElementById("labCopyPanel"); if(!box) return;
+  const inds=collectHistInds();
+  if(!inds.length){ box.innerHTML='<div class="empty small">还没有历史指标可复制，先存一条吧。</div>'; return; }
+  box.innerHTML = inds.map((o,i)=>{
+    const it=o.last, v=(it.value!=null?it.value:"").toString();
+    return '<button type="button" class="lab-copy-item" data-ci="'+i+'"><b>'+esc(it.name)+'</b>'+
+      '<span class="small muted">上次：'+(v||"—")+(it.unit?(' '+it.unit):'')+' · '+esc(o.date)+'</span></button>';
+  }).join("");
+  box.querySelectorAll("[data-ci]").forEach(b=> b.onclick=()=>{
+    const o=inds[+b.dataset.ci], it=o.last;
+    curLabItems.push({name:it.name||"", value:(it.value!=null?it.value:"").toString(), low:it.low||"", high:it.high||"", unit:it.unit||"", note:it.note||"", type:it.type||"num", date:o.date||""});
+    renderLabEditor();
+  });
+}
+function labCopyToggle(){
+  const p=document.getElementById("labCopyPanel"); if(!p) return;
+  if(p.hidden){ renderLabCopy(); p.hidden=false; } else { p.hidden=true; }
+}
+function renderMedLabs(){
+  const box=document.getElementById("labList");
+  if(!S.medLabs.length){ box.innerHTML='<div class="empty">还没有检验记录，填一次试试。</div>'; return; }
+  /* 预聚合：同名指标跨报告序列（按日期升序），用于在每个指标行内联「趋势对比」 */
+  const byName={};
+  S.medLabs.forEach(r=> (r.items||[]).forEach(it=>{
+    if(!it.name) return;
+    const eDate=it.date||r.date;   /* 指标各自日期，未单独填则继承报告日期 */
+    (byName[it.name]=byName[it.name]||[]).push({repId:r.id, date:eDate, value:it.value, num:isNaN(parseFloat(it.value))?null:parseFloat(it.value), status:labStatus(it).cls});
+  }));
+  Object.keys(byName).forEach(k=> byName[k].sort((a,b)=> a.date<b.date?-1:1));
+  /* 某指标的历史块：每个指标在列表里只出现一次，故直接列出该指标的全部历史
+     （日期 值 ↑/↓ + 迷你条），**按时间倒序，最新在最上面** */
+  const labTrendHtml=(curDate,it)=>{
+    const arr=byName[it.name]; if(!arr||arr.length<2) return "";
+    const numsAll=arr.filter(a=>a.num!=null).map(a=>a.num);
+    const mn=numsAll.length?Math.min.apply(null,numsAll):0, mx=numsAll.length?Math.max.apply(null,numsAll):0, span=(mx-mn)||1;
+    const seq = arr.map((a,i)=>{
+      let arrow="";
+      if(i>0 && a.num!=null && arr[i-1].num!=null){
+        const d=a.num-arr[i-1].num;
+        if(d!==0) arrow=' <span class="cmp-arrow '+(d>0?"up":"down")+'">'+(d>0?"↑":"↓")+Math.abs(d).toFixed(2)+'</span>';
+      }
+      return {a:a, arrow:arrow, isCur:(a.date===curDate), w:Math.max(4, a.num!=null?Math.round((a.num-mn)/span*100):4)};
+    }).reverse();   /* 倒序：最新一次排在第一行 */
+    const rows = seq.map(o=>
+      '<div class="lab-trend-row'+(o.isCur?" cur":"")+'">'+
+      '<span class="d">'+o.a.date+'</span>'+
+      '<span class="v">'+esc(o.a.value||"—")+'</span>'+o.arrow+
+      (o.a.num!=null?'<span class="cmp-track sm"><span class="cmp-bar '+(o.a.status||"ok")+'" style="width:'+o.w+'%"></span></span>':"")+'</div>').join("");
+    return '<div class="lab-trend"><div class="lab-trend-head">历次记录（共 '+arr.length+' 次）· 最新在上</div>'+
+           '<div class="lab-trend-list">'+rows+'</div></div>';
+  };
+  /* 所有检验记录合并为「一张卡」：同名指标只显示一次（取检测日最晚那次的值），其余日期全部收进该指标下方的「历次记录」；数据不删除，只是不再重复成卡 */
+  const groups=[{reps: S.medLabs.slice().sort((a,b)=> a.date<b.date?1:(a.date>b.date?-1:0))}];
+  box.innerHTML = groups.map(g=>{
+    /* reps 已按日期倒序，第一个即最新一次 */
+    const latest=g.reps[0];
+    const picked=[], seen=Object.create(null);
+    g.reps.forEach(r=> (r.items||[]).forEach((it,idx)=>{
+      if(!it.name) return;
+      const ed=it.date||r.date;
+      const rec={it:it, repId:r.id, idx:idx, ed:ed};
+      if(!(it.name in seen)){ seen[it.name]=picked.length; picked.push(rec); }
+      else if(ed > picked[seen[it.name]].ed){ picked[seen[it.name]]=rec; }
+    }));
+    /* 指标行按检测日倒序排列，最新的指标排在前面 */
+    picked.sort((a,b)=> a.ed<b.ed?1:(a.ed>b.ed?-1:0));
+    const rows = picked.length ? picked.map(rec=>{
+      const it=rec.it, st=labStatus(it);
+      const tag = st.cls?('<span class="lab-tag '+st.cls+'">'+esc(st.label)+'</span>'):"";
+      const val = (it.value!==""&&it.value!=null?it.value:"—") + (it.unit?(' '+it.unit):'');
+      const ref = (it.low!==""&&it.low!=null&&!isNaN(parseFloat(it.low)))?('参考 '+it.low+'–'+it.high):'';
+      const trend=labTrendHtml(rec.ed,it);
+      const enc=encodeURIComponent(it.name||"");
+      return '<div class="lab-row"><div class="lr-main"><b>'+esc(it.name)+'</b> '+tag+'<span class="li-date">'+rec.ed+'</span><div class="meta">'+esc(val)+(ref?(' · '+ref):"")+(it.note?(' · '+esc(it.note)):"")+'</div>'+(trend?trend:"")+'</div>'+
+        '<button class="lr-x sm" data-ldel-item="'+enc+'">删除</button></div>';
+    }).join("") : '<div class="empty small">这里还没有指标。</div>';
+    const abn = picked.filter(rec=>{ const s=labJudge(rec.it); return s==="low"||s==="high"; }).length;
+    const total = picked.length;
+    const imgs=[], seenImg=Object.create(null);
+    (latest.imgs||[]).forEach(im=>{
+      const s=im&&im.dataUrl?im.dataUrl:im;
+      if(s && !seenImg[s]){ seenImg[s]=1; imgs.push(s); }
+    });
+    const imgsHtml = imgs.length?('<div class="lab-imgs">'+imgs.map(s=>'<img class="lab-thumb ro" src="'+esc(s)+'" data-img="'+esc(s)+'">').join("")+'</div>'):"";
+    return '<div class="lab-card'+(imgs.length?" has-img":"")+'">'+
+      '<div class="lab-head"><b>检验记录</b>'+
+      '<span class="muted small">'+total+' 项'+(abn?(' · '+abn+' 项异常'):' · 全部正常')+(g.reps.length>1?(' · 共 '+g.reps.length+' 份'):'')+'</span></div>'+
+      imgsHtml+rows+
+      '<div class="lab-card-acts"><button class="lr-x" data-ledit="'+latest.id+'">修改</button>'+
+      '<button class="lr-x" data-ldel-group="'+g.reps.map(r=>r.id).join(",")+'" data-gname="检验记录" title="删除全部检验记录">删除记录</button></div></div>';
+  }).join("");
+  box.querySelectorAll("[data-ledit]").forEach(b=> b.onclick=()=> labStartEdit(b.dataset.ledit));
+  box.querySelectorAll("[data-ldel-group]").forEach(b=> b.onclick=()=>{
+    const ids=String(b.dataset.ldelGroup||"").split(",").filter(Boolean);
+    if(!ids.length) return;
+    const nm=b.dataset.gname||"";
+    const msg="删除「"+nm+"」的全部 "+ids.length+" 次记录？此操作不可撤销。";
+    const yes = (typeof window!=="undefined" && typeof window.confirm==="function") ? window.confirm(msg) : true;
+    if(!yes) return;
+    const set=Object.create(null); ids.forEach(id=> set[id]=1);
+    if(curLabEditId && set[curLabEditId] && typeof labExitEdit==="function") labExitEdit();
+    S.medLabs=S.medLabs.filter(x=> !set[x.id]);
+    persist(); renderMedical(); renderDashboard(); toast("已删除 "+ids.length+" 次记录");
+  });
+  box.querySelectorAll("[data-ldel-item]").forEach(b=> b.onclick=()=>{
+    const nm=decodeURIComponent(b.dataset.ldelItem||""); if(!nm) return;
+    S.medLabs.forEach(r=>{ r.items=(r.items||[]).filter(it=> (it.name||"")!==nm); });
+    S.medLabs=S.medLabs.filter(r=> (r.items||[]).length);
+    persist(); renderMedical(); renderDashboard(); toast("已删除指标「"+nm+"」");
+  });
+  box.querySelectorAll(".lab-thumb.ro").forEach(im=> im.onclick=()=> showLabImage(im.getAttribute("data-img")));
+}
+
+/* 点击缩略图放大查看（历史报告里已保存的图片） */
+function showLabImage(src){
+  let ov=document.getElementById("labLightbox");
+  if(!ov){
+    ov=document.createElement("div");
+    ov.id="labLightbox"; ov.className="lab-lightbox";
+    ov.onclick=()=> ov.remove();
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML='<img src="'+esc(src)+'"><div class="lab-lightbox-tip">点击任意处关闭</div>';
+}
+
+/* 进入修改：把这条记录载入编辑区 */
+function labStartEdit(id){
+  const r=S.medLabs.find(x=>x.id===id); if(!r) return;
+  curLabEditId=id;
+  curLabItems=(r.items||[]).map(it=>({name:it.name||"",value:it.value||"",low:it.low||"",high:it.high||"",unit:it.unit||"",note:it.note||"",type:it.type||"num",date:it.date||""}));
+  renderLabEditor();
+  document.getElementById("labFormTitle").textContent="修改记录";
+  document.getElementById("labSave").textContent="更新记录";
+  document.getElementById("labCancelEdit").style.display="";
+  const anchor=document.getElementById("labItems");
+  if(anchor && anchor.scrollIntoView) anchor.scrollIntoView({behavior:"smooth",block:"center"});
+  toast("已进入修改，改完点「更新记录」");
+}
+function labExitEdit(){
+  curLabEditId=null;
+  curLabItems=[];
+  document.getElementById("labFormTitle").textContent="指标明细";
+  document.getElementById("labSave").textContent="保存记录";
+  document.getElementById("labCancelEdit").style.display="none";
+  renderLabEditor();
+}
+
+/* 指标趋势对比已合并进报告列表：每个指标行内联显示「较上次 ↑/↓差值 + 迷你条」（见 renderMedLabs） */
+
+/* period — 记录信息全部整合进年历，按月分行显示 */
+let perEditId = null;
+let perCalYear = new Date().getFullYear();
+function periodStartEdit(id){
+  const rec = S.period.find(x=>x.id===id); if(!rec) return;
+  perEditId = rec.id;
+  document.getElementById("perStart").value = rec.start;
+  document.getElementById("perNote").value = rec.note||"";
+  document.getElementById("perFormTitle").textContent = "修改经期记录";
+  document.getElementById("perEditHint").style.display = "";
+  document.getElementById("btnPerAdd").textContent = "更新";
+  const f=document.getElementById("perStart");
+  if(f&&f.focus) f.focus();
+  if(f&&f.scrollIntoView) f.scrollIntoView({behavior:"smooth",block:"center"});
+  toast("正在编辑，改完点更新");
+}
+function periodExitEdit(){
+  perEditId = null;
+  document.getElementById("perFormTitle").textContent = "记录当前最近的经期";
+  document.getElementById("perEditHint").style.display = "none";
+  document.getElementById("btnPerAdd").textContent = "保存";
+}
+function renderPeriod(){ renderPeriodYear(); }
+
+function renderPeriodYear(){
+  const y = perCalYear;
+  const list = periodList();                                   // 升序
+  const latestId = list.length ? list[list.length-1].id : null;
+  const byMonth = {};
+  let outside = 0;
+  list.forEach(p=>{
+    const dt = parseD(p.start);
+    if(dt.getFullYear()!==y){ outside++; return; }
+    const idx = list.indexOf(p);
+    (byMonth[dt.getMonth()] = byMonth[dt.getMonth()] || []).push({
+      id: p.id,
+      day: dt.getDate(),
+      start: p.start,
+      daysAgo: diffDays(todayStr(), p.start),
+      interval: idx>0 ? diffDays(p.start, list[idx-1].start) : null,
+      isLatest: p.id===latestId,
+      note: p.note||""
+    });
+  });
+  // 预测下次来经日（按每月同号），用于绿色提醒
+  const pred = periodReminderDate();
+  let predMo = -1, predDay = -1;
+  if(pred){ const pp=pred.split("-"); if(+pp[0]===y){ predMo=(+pp[1])-1; predDay=+pp[2]; } }
+  // 顺序：预计日月份排最上，其余从当前月份往前倒序（回到去年 12 月收尾）
+  const curMo = new Date().getMonth();
+  const order = [];
+  if(predMo>=0 && predMo<12) order.push(predMo);
+  for(let k=0;k<12;k++){ const m=(curMo - k + 12) % 12; if(m!==predMo) order.push(m); }
+
+  const months = order.map(mo=>{
+    const items = byMonth[mo] ? byMonth[mo].sort((a,b)=>a.day-b.day) : [];
+    // 预测行（仅当预测日落在当前年份的该月）
+    let predRow = "";
+    if(pred && predMo===mo){
+      predRow = '<div class="ym-row ym-pred">'+
+        '<span class="ym-pred-pill">'+predDay+'</span>'+
+        '<div class="ym-main"><div class="ym-meta pred">预计 '+predDay+'日 来经 · 按每月同号提醒，注意饮食</div></div>'+
+      '</div>';
+    }
+    let body;
+    if(!items.length && !predRow){
+      body = '<div class="ym-empty">本月无记录</div>';
+    } else {
+      body = predRow + items.map(it=>{
+        let meta = it.start;
+        if(it.isLatest) meta += " · 距今天 "+it.daysAgo+" 天";
+        if(it.interval!=null) meta += " · 与上次间隔 "+it.interval+" 天";
+        return '<div class="ym-row">'+
+          '<button class="ym-pd" data-pedit="'+it.id+'" title="点击编辑这条记录">'+it.day+'</button>'+
+          '<div class="ym-main">'+
+            '<div class="ym-meta">'+meta+'</div>'+
+            (it.note ? '<div class="ym-note">'+esc(it.note)+'</div>' : '')+
+          '</div>'+
+          '<span class="lr-acts">'+
+            '<button class="lr-x" data-pedit="'+it.id+'">编辑</button>'+
+            '<button class="lr-x" data-pdel="'+it.id+'">删除</button>'+
+          '</span>'+
+        '</div>';
+      }).join("");
+    }
+    const isCur = (mo===curMo);
+    const isPred = (mo===predMo);
+    return '<div class="ym'+( (items.length||predRow)?"":" ym-off")+(isCur?" ym-cur":"")+(isPred?" ym-pred-m":"")+'">'+
+      '<div class="ym-h"><b>'+(mo+1)+'月</b>'+
+        (items.length?('<span class="ym-cnt">'+items.length+' 次</span>'):"")+
+        (isCur?'<span class="ym-cur-tag">本月</span>':"")+
+        (isPred?'<span class="ym-pred-tag">预计</span>':"")+'</div>'+
+      '<div class="ym-list">'+body+'</div></div>';
+  });
+
+  const box=document.getElementById("perYearCal");
+  box.innerHTML = months.join("") + (outside ? ('<div class="ym-hint">另有 '+outside+' 条记录不在 '+y+' 年，可用「上一年 / 下一年」查看</div>') : "");
+  document.getElementById("perYearLabel").textContent = y+" 年";
+  box.querySelectorAll("[data-pedit]").forEach(b=> b.onclick=()=> periodStartEdit(b.dataset.pedit));
+  box.querySelectorAll("[data-pdel]").forEach(b=> b.onclick=()=>{
+    S.period = S.period.filter(x=>x.id!==b.dataset.pdel);
+    if(perEditId===b.dataset.pdel) periodExitEdit();
+    persist(); renderPeriodYear(); renderDashboard(); toast("已删除");
+  });
+}
+
+/* 就诊 · 检验记录 相关临时状态 */
+let curLabItems = [];
+let curLabEditId = null;  /* 正在修改的记录 id，null 表示新增 */
+let curVisitReview = [];  /* 编辑中的复查日列表，可多个 */
+const VISIT_HOSPITAL_DEFAULT = "松江中心医院";
+const VISIT_DEPT_DEFAULT     = "风湿免疫科";
+const VISIT_DOCTOR_DEFAULT   = "陆翠";
+const VISIT_DIAG_DEFAULT     = "类风关";
+
+
+/* trip */
+let editingTripId = null;
+function loadTripToForm(t){
+  editingTripId = t.id;
+  document.getElementById("tripTitle").value = t.title||"";
+  document.getElementById("tripDate").value = t.date||"";
+  document.getElementById("tripTime").value = t.time||"";
+  document.getElementById("tripPlace").value = t.place||"";
+  document.getElementById("tripNote").value = t.note||"";
+  document.getElementById("tripRemind").checked = !!t.remind;
+  document.getElementById("tripAdd").textContent = "保存修改";
+  document.getElementById("tripCancelEdit").style.display = "";
+  const hint = document.getElementById("tripEditHint");
+  hint.style.display = ""; hint.textContent = "正在编辑：" + (t.title||"(未命名)");
+  document.getElementById("tripTitle").focus();
+}
+function resetTripForm(){
+  editingTripId = null;
+  ["tripTitle","tripDate","tripTime","tripPlace","tripNote"].forEach(i=>document.getElementById(i).value="");
+  document.getElementById("tripRemind").checked = true;
+  document.getElementById("tripAdd").textContent = "添加";
+  document.getElementById("tripCancelEdit").style.display = "none";
+  document.getElementById("tripEditHint").style.display = "none";
+}
+function tripList(){ return S.trip.slice().sort((a,b)=> (a.date+(a.time||"")) < (b.date+(b.time||""))?-1:1); }
+function upcomingTrips(){ const t=todayStr(); return S.trip.filter(x=>!x.done && diffDays(x.date,t)>=0).sort((a,b)=>(a.date+(a.time||""))<(b.date+(b.time||""))?-1:1); }
+function tripSoonCount(){ return S.trip.filter(x=>x.remind && !x.done && diffDays(x.date,todayStr())<=3).length; }
+function renderTrip(){
+  const soon = document.getElementById("tripSoon");
+  const up = upcomingTrips().filter(x=>x.remind);
+  if(!up.length) soon.innerHTML='<div class="empty">近期没有待提醒的行程。</div>';
+  else soon.innerHTML = up.slice(0,6).map(x=>{
+    const d = diffDays(x.date, todayStr());
+    const over = d<0;
+    return '<div class="list-row'+(over?' over':'')+'"><div class="lr-main"><b>'+esc(x.title)+'</b>'+
+      '<div class="meta">'+x.date+(x.time?(' '+x.time):"")+(x.place?(' · '+esc(x.place)):"")+(over?' · 已逾期':(d===0?' · 今天':(' · 还有 '+d+' 天')))+(x.note?(' · '+esc(x.note)):"")+'</div></div>'+
+      '<button class="lr-x" data-tedit="'+x.id+'">编辑</button>'+
+      (x.done?'<span class="pill">已完成</span>':'<button class="lr-x" data-tdone="'+x.id+'">完成</button>')+'</div>';
+  }).join("");
+  soon.querySelectorAll("[data-tdone]").forEach(b=> b.onclick=()=>{
+    const t=S.trip.find(x=>x.id===b.dataset.tdone); if(t) t.done=true; persist(); renderTrip(); renderDashboard(); toast("已标记完成"); });
+  soon.querySelectorAll("[data-tedit]").forEach(b=> b.onclick=()=>{ const t=S.trip.find(x=>x.id===b.dataset.tedit); if(t) loadTripToForm(t); });
+  const list = document.getElementById("tripList");
+  if(!S.trip.length) list.innerHTML='<div class="empty">还没有行程。</div>';
+  else list.innerHTML = tripList().map(x=>{
+    const d = diffDays(x.date, todayStr()); const over=d<0;
+    return '<div class="list-row'+(over&&!x.done?' over':'')+'"><div class="lr-main"><b>'+esc(x.title)+'</b>'+(x.remind?'<span class="pill" style="margin-left:8px">提醒</span>':'')+
+      '<div class="meta">'+x.date+(x.time?(' '+x.time):"")+(x.place?(' · '+esc(x.place)):"")+(x.note?(' · '+esc(x.note)):"")+(over&&!x.done?' · 已逾期':"")+'</div></div>'+
+      '<button class="lr-x" data-tedit="'+x.id+'">编辑</button>'+
+      (x.done?'<span class="pill">已完成</span>':'<button class="lr-x" data-tdone2="'+x.id+'">完成</button>')+
+      '<button class="lr-x" data-tdel="'+x.id+'">删除</button></div>';
+  }).join("");
+  list.querySelectorAll("[data-tedit]").forEach(b=> b.onclick=()=>{ const t=S.trip.find(x=>x.id===b.dataset.tedit); if(t) loadTripToForm(t); });
+  list.querySelectorAll("[data-tdone2]").forEach(b=> b.onclick=()=>{ const t=S.trip.find(x=>x.id===b.dataset.tdone2); if(t) t.done=true; persist(); renderTrip(); renderDashboard(); toast("已标记完成"); });
+  list.querySelectorAll("[data-tdel]").forEach(b=> b.onclick=()=>{
+    S.trip=S.trip.filter(x=>x.id!==b.dataset.tdel); persist(); renderTrip(); renderDashboard(); toast("已删除"); });
+}
+
+/* unified refresh (DAG: render fns never call each other) */
+function refreshAll(){
+  renderDashboard();
+  renderFinance();
+  renderMedical();
+  renderPeriod();
+  renderTrip();
+  syncStoreUI();
+}
+function syncStoreUI(){
+  const d=document.getElementById("storeDot"), t=document.getElementById("storeTxt");
+  if(corruptRaw){ d.className="store-dot bad"; t.textContent="数据异常"; }
+  else if(!storageOk){ d.className="store-dot bad"; t.textContent="存储失败"; }
+  else { d.className="store-dot"; t.textContent="已保存"; }
+}
+
+/* ================= view switching ================= */
+const MOD_COLORS = {
+  dashboard:["var(--c-home)","var(--c-home-soft)"],
+  finance:["var(--c-fin)","var(--c-fin-soft)"],
+  medical:["var(--c-med)","var(--c-med-soft)"],
+  period:["var(--c-per)","var(--c-per-soft)"],
+  trip:["var(--c-trip)","var(--c-trip-soft)"]
+};
+function showView(name){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  const el = document.getElementById("view-"+name); if(el) el.classList.add("active");
+  document.querySelectorAll("#nav button").forEach(b=> b.classList.toggle("active", b.dataset.view===name));
+  document.querySelectorAll("#tabbar button").forEach(b=> b.classList.toggle("active", b.dataset.view===name));
+  const mc = MOD_COLORS[name] || MOD_COLORS.dashboard;
+  document.documentElement.style.setProperty("--mc", mc[0]);
+  document.documentElement.style.setProperty("--mc-soft", mc[1]);
+  const tc=document.querySelector('meta[name="theme-color"]'); if(tc) tc.setAttribute("content", mc[0]);
+  if(name!=="dashboard" && window.innerWidth<=860) window.scrollTo({top:0});
+}
+
+/* ================= events (bound once) ================= */
+function bindStatic(){
+  document.querySelectorAll("#nav button, #tabbar button").forEach(b=> b.onclick=()=>showView(b.dataset.view));
+  document.getElementById("finType").onchange = fillFinCategory;
+  document.getElementById("btnFinAdd").onclick = ()=>{
+    const date=document.getElementById("finDate").value||todayStr();
+    const type=document.getElementById("finType").value;
+    const amount=parseFloat(document.getElementById("finAmount").value);
+    if(!(amount>0)){ toast("请输入有效金额"); return; }
+    S.finance.push({id:uid(), date, type, amount, category:document.getElementById("finCategory").value, note:document.getElementById("finNote").value.trim()});
+    bumpAdd(); persist(); document.getElementById("finAmount").value=""; document.getElementById("finNote").value="";
+    refreshAll(); toast("已记账");
+  };
+  document.getElementById("btnFinExcel").onclick = exportExcel;
+  document.getElementById("btnMedAdd").onclick = ()=>{
+    const date=document.getElementById("medDate").value||todayStr();
+    const hospital=(document.getElementById("medHospital").value.trim())||VISIT_HOSPITAL_DEFAULT;
+    const dept=(document.getElementById("medDept").value.trim())||VISIT_DEPT_DEFAULT;
+    const doctor=(document.getElementById("medDoctor").value.trim())||VISIT_DOCTOR_DEFAULT;
+    const diag=(document.getElementById("medDiag").value.trim())||VISIT_DIAG_DEFAULT;
+    const review=(curVisitReview||[]).map(d=>String(d||"").trim()).filter(Boolean);
+    const cashRaw=document.getElementById("medCash").value.trim();
+    const cash=cashRaw===""?null:(parseFloat(cashRaw)||0);
+    S.medVisits.push({id:uid(), date, hospital, dept, doctor, diag, review, cash, note:document.getElementById("medNote").value.trim()});
+    bumpAdd(); persist();
+    initVisitForm();   /* 复位为默认值 + 清空复查日，方便连续录入 */
+    renderMedical(); renderDashboard(); toast("已保存就诊");
+  };
+  document.getElementById("btnMedAdd2").onclick = ()=>{
+    const name=document.getElementById("medName").value.trim(); if(!name){ toast("请填药名"); return; }
+    S.medMeds.push({id:uid(), name, dose:document.getElementById("medDose").value.trim(), freq:document.getElementById("medFreq").value.trim(), note:""});
+    bumpAdd(); persist(); document.getElementById("medName").value=""; document.getElementById("medDose").value=""; document.getElementById("medFreq").value="";
+    renderMedical(); renderDashboard(); toast("已添加用药");
+  };
+  // 就诊流水编辑器：默认值预填 + 复查日（可多个，到点提醒）
+  function initVisitForm(){
+    const set=(id,def)=>{ const e=document.getElementById(id); if(e && !e.value) e.value=def; };
+    set("medDate", todayStr());
+    set("medHospital", VISIT_HOSPITAL_DEFAULT);
+    set("medDept", VISIT_DEPT_DEFAULT);
+    set("medDoctor", VISIT_DOCTOR_DEFAULT);
+    set("medDiag", VISIT_DIAG_DEFAULT);
+    const ce=document.getElementById("medCash"); if(ce) ce.value="";   /* 自费现金每次清空，不留默认值 */
+    curVisitReview=[]; renderVisitReview();
+  }
+  function renderVisitReview(){
+    const box=document.getElementById("medReviewList"); if(!box) return;
+    if(!curVisitReview.length){ box.innerHTML='<span class="lab-next-empty">未设置，点「+ 添加复查日」可加一个或多个</span>'; return; }
+    box.innerHTML = curVisitReview.map((d,i)=>
+      '<span class="lab-next-chip"><input type="date" data-ri="'+i+'" value="'+esc(d||"")+'">'+
+      '<button type="button" class="li-x" data-rdel="'+i+'" title="移除这个复查日">×</button></span>').join("");
+    box.querySelectorAll("input[data-ri]").forEach(inp=>{
+      inp.oninput=()=>{ curVisitReview[+inp.dataset.ri]=inp.value; };
+    });
+    box.querySelectorAll("[data-rdel]").forEach(b=> b.onclick=()=>{
+      curVisitReview.splice(+b.dataset.rdel,1); renderVisitReview();
+    });
+  }
+  initVisitForm();
+  document.getElementById("medAddReview").onclick = ()=>{
+    curVisitReview.push(""); renderVisitReview();
+    const box=document.getElementById("medReviewList");
+    const last=box && box.querySelector('input[data-ri="'+(curVisitReview.length-1)+'"]');
+    if(last && last.focus) last.focus();
+  };
+  document.getElementById("labTpl").onclick = ()=>{ labTplToggle(); };
+  document.getElementById("labCopyBtn").onclick = ()=>{ labCopyToggle(); };
+  document.getElementById("labAddItem").onclick = ()=>{
+    curLabItems.push({name:"", value:"", low:"", high:"", unit:"", note:"", type:"num", date:""}); renderLabEditor();
+  };
+  document.getElementById("labSave").onclick = ()=>{
+    const today=todayStr();
+    const items = curLabItems.filter(it=>it.name.trim()||it.value.trim())
+      .map(it=>{
+        const dt=(it.date||"").trim()||today;   /* 未填检测日按今天算，方便先存后改 */
+        return {name:it.name.trim(), value:it.value.trim(), low:it.low.trim(), high:it.high.trim(), unit:it.unit.trim(), note:it.note||"", type:it.type||"num", date:dt};
+      });
+    if(!items.length){ toast("至少填一个指标"); return; }
+    /* 记录日期＝本次最晚的检测日，仅用于排序与「最新一次」定位；卡片上不展示 */
+    const date = items.map(it=>it.date).sort().pop() || today;
+    if(curLabEditId){
+      const rep=S.medLabs.find(x=>x.id===curLabEditId);
+      if(rep){ rep.date=date; rep.items=items; }   /* 保留记录里已有的参考图 */
+      bumpAdd(); persist(); labExitEdit(); renderMedical(); renderDashboard(); toast("已更新记录");
+    } else {
+      S.medLabs.push({id:uid(), date, items, imgs:[]});
+      bumpAdd(); persist();
+      curLabItems=[];
+      renderLabEditor(); renderMedical(); renderDashboard(); toast("已保存记录");
+    }
+  };
+  document.getElementById("labCancelEdit").onclick = ()=>{ labExitEdit(); toast("已取消修改"); };
+  document.getElementById("btnPerAdd").onclick = ()=>{
+    const start=document.getElementById("perStart").value; if(!start){ toast("请选开始日"); return; }
+    const note=document.getElementById("perNote").value.trim();
+    if(perEditId){
+      const rec = S.period.find(x=>x.id===perEditId);
+      if(rec){ rec.start=start; rec.note=note; }
+      perEditId=null;
+      document.getElementById("btnPerAdd").textContent="保存";
+      document.getElementById("perEditHint").style.display="none";
+      document.getElementById("perFormTitle").textContent="记录当前最近的经期";
+      toast("已更新经期记录");
+    } else {
+      S.period.push({id:uid(), start, note});
+      bumpAdd();
+      toast("已记录最近一次经期");
+    }
+    persist();
+    document.getElementById("perNote").value="";
+    document.getElementById("perStart").value=todayStr();
+    renderPeriod(); renderDashboard();
+  };
+  document.getElementById("btnPerCancel").onclick = ()=>{
+    perEditId=null;
+    document.getElementById("perEditHint").style.display="none";
+    document.getElementById("btnPerAdd").textContent="保存";
+    document.getElementById("perFormTitle").textContent="记录当前最近的经期";
+    document.getElementById("perStart").value=todayStr();
+    document.getElementById("perNote").value="";
+  };
+  document.getElementById("perYearPrev").onclick = ()=>{ perCalYear--; renderPeriodYear(); };
+  document.getElementById("perYearNext").onclick = ()=>{ perCalYear++; renderPeriodYear(); };
+  document.getElementById("perYearNow").onclick = ()=>{ perCalYear=new Date().getFullYear(); renderPeriodYear(); };
+  // 行程
+  document.getElementById("tripAdd").onclick = ()=>{
+    const title=document.getElementById("tripTitle").value.trim(), date=document.getElementById("tripDate").value;
+    if(!title||!date){ toast("标题和日期都要填"); return; }
+    if(editingTripId){
+      const t=S.trip.find(x=>x.id===editingTripId);
+      if(t){ t.title=title; t.date=date; t.time=document.getElementById("tripTime").value||"";
+        t.place=document.getElementById("tripPlace").value.trim(); t.note=document.getElementById("tripNote").value.trim();
+        t.remind=document.getElementById("tripRemind").checked; }
+      resetTripForm(); renderTrip(); renderDashboard(); toast("已保存修改");
+    } else {
+      S.trip.push({id:uid(), title, date, time:document.getElementById("tripTime").value||"",
+        place:document.getElementById("tripPlace").value.trim(), note:document.getElementById("tripNote").value.trim(),
+        remind:document.getElementById("tripRemind").checked, done:false});
+      resetTripForm(); renderTrip(); renderDashboard(); toast("已添加");
+    }
+  };
+  document.getElementById("tripCancelEdit").onclick = ()=> resetTripForm();
+  // data management
+  document.getElementById("btnExport").onclick = exportJSON;
+  document.getElementById("btnImport").onclick = ()=>document.getElementById("fileImport").click();
+  document.getElementById("btnImport2").onclick = ()=>document.getElementById("fileImport").click();
+  document.getElementById("fileImport").onchange = importJSON;
+  document.getElementById("btnClearDemo").onclick = ()=>{
+    if(!confirm("清空预置的示例数据（保留你之后录入的真实数据）？")) return;
+    lsSet(KEYS.cleared,"1"); S.settings.cleared=true;
+    ["finance","medVisits","medMeds","medLabs","period","trip"].forEach(k=>{ S[k]=S[k].filter(x=>!x._demo); });
+    persist(); refreshAll(); toast("示例数据已清空");
+  };
+  document.getElementById("btnWipe").onclick = ()=>{
+    if(!confirm("⚠️ 将清空全部数据且无法恢复（除非你已导出备份）。确定？")) return;
+    wipeAll(false); toast("已全部清空");
+  };
+  // recovery modal
+  document.getElementById("btnExportCorrupt").onclick = ()=>{ exportJSON(); document.getElementById("recoveryMask").classList.remove("show"); };
+  document.getElementById("btnResetDemo").onclick = ()=>{ wipeAll(false); seedFresh(); document.getElementById("recoveryMask").classList.remove("show"); corruptRaw=null; refreshAll(); toast("已恢复示例"); };
+  document.getElementById("btnKeepReadable").onclick = ()=>{ document.getElementById("recoveryMask").classList.remove("show"); corruptRaw=null; storageOk=true; syncStoreUI(); };
+}
+function wipeAll(keepCleared){
+  const tpls = (S.medTpls && S.medTpls.length) ? S.medTpls : defaultMedTpls();   /* 自定义模板属于个人配置，清空数据时保留 */
+  S = {finance:[],budget:{},medVisits:[],medMeds:[],medLabs:[],medTpls:tpls,period:[],trip:[],settings:{addCount:0,cleared:keepCleared?true:S.settings.cleared}};
+  persist(); refreshAll();
+}
+function seedFresh(){
+  const d=demoData();
+  d.medTpls = (S.medTpls && S.medTpls.length) ? S.medTpls : defaultMedTpls();
+  S=d; lsSet(KEYS.cleared,"0"); persist();
+}
+
+/* export / import */
+function exportJSON(){
+  const data = {
+    _app:"life-desk", _v:1, _exported:todayStr(),
+    finance:S.finance, budget:S.budget, medVisits:S.medVisits, medMeds:S.medMeds,
+    medLabs:S.medLabs, medTpls:S.medTpls||[], period:S.period, trip:S.trip, settings:S.settings
+  };
+  download("life-desk-"+todayStr()+".json", JSON.stringify(data,null,2), "application/json");
+  toast("备份已导出");
+}
+function exportExcel(){
+  const rows = S.finance.slice().sort((a,b)=>a.date<b.date?1:-1);
+  let html = '<meta charset="utf-8"><table border="1"><tr><th>日期</th><th>类型</th><th>金额</th><th>科目</th><th>备注</th></tr>';
+  rows.forEach(f=>{ html+='<tr><td>'+f.date+'</td><td>'+(f.type==="out"?"支出":"收入")+'</td><td>'+ (+f.amount).toFixed(2) +'</td><td>'+esc(f.category)+'</td><td>'+esc(f.note||"")+'</td></tr>'; });
+  html+='</table>';
+  download("记账流水-"+thisMonth()+".xls", html, "application/vnd.ms-excel");
+  toast("Excel 已导出");
+}
+function download(name, content, mime){
+  try{
+    const blob = new Blob([content], {type:mime+";charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 100);
+  }catch(e){ showBanner("导出失败："+e.message, "bad", "知道了", hideBanner); }
+}
+function importJSON(ev){
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data || typeof data!=="object") throw new Error("格式不正确");
+      S.finance = Array.isArray(data.finance)?data.finance:[];
+      S.budget = (data.budget&&typeof data.budget==="object")?data.budget:{};
+      S.medVisits = Array.isArray(data.medVisits)?data.medVisits:[];
+      S.medMeds = Array.isArray(data.medMeds)?data.medMeds:[];
+      S.medLabs = Array.isArray(data.medLabs)?data.medLabs:[];
+      if(Array.isArray(data.medTpls)) S.medTpls = data.medTpls;
+      S.period = Array.isArray(data.period)?data.period:[];
+      S.trip = Array.isArray(data.trip)?data.trip:[];
+      S.settings = (data.settings&&typeof data.settings==="object")?data.settings:{addCount:0,cleared:false};
+      persist(); refreshAll(); toast("已导入 "+ (S.finance.length+S.medVisits.length+S.period.length+S.trip.length) +" 条记录");
+    }catch(e){ showBanner("导入失败：文件损坏或格式不对", "bad", "知道了", hideBanner); }
+    ev.target.value="";
+  };
+  reader.onerror = ()=>{ showBanner("读取文件失败", "bad", "知道了", hideBanner); ev.target.value=""; };
+  reader.readAsText(file);
+}
+
+/* ================= init ================= */
+function init(){
+  loadState();
+  if(corruptRaw){ document.getElementById("recoveryMask").classList.add("show"); }
+  ensureDemo();
+  // default dates
+  const t = todayStr();
+  ["finDate","medDate","perStart","engDate"].forEach(id=>{ const e=document.getElementById(id); if(e&&!e.value) e.value=t; });
+  bindStatic();
+  renderLabEditor();
+  const rbtn = document.getElementById("btnRefresh");
+  if(rbtn){ rbtn.onclick = ()=>{ refreshAll(); rbtn.classList.remove("spin"); void rbtn.offsetWidth; rbtn.classList.add("spin"); }; }
+  refreshAll();
+  setupPersistentStorage();
+  setupInstallHint();
+}
+
+/* 申请持久存储 + 注册 Service Worker，避免手机「添加到主屏幕」后存储被清空 */
+function setupPersistentStorage(){
+  // 原生 App（Android WebView）内 localStorage 本就持久，无需申请；也不注册 SW
+  if(/wv|LifeDeskApp/.test(navigator.userAgent||"")) return;
+  try{
+    if(navigator.storage && navigator.storage.persist){
+      navigator.storage.persist().then(function(granted){
+        var d=document.getElementById("storeDot"), t=document.getElementById("storeTxt");
+        if(granted && d){ d.className="store-dot ok"; if(t) t.textContent="已锁定"; }
+      }).catch(function(){});
+    }
+  }catch(e){}
+  try{
+    if(location.protocol==="https:" && "serviceWorker" in navigator){
+      navigator.serviceWorker.register("sw.js").catch(function(){});
+    }
+  }catch(e){}
+}
+
+/* 手机「添加到主屏幕」引导（仅未安装且未忽略时显示） */
+function setupInstallHint(){
+  const hint=document.getElementById("installHint");
+  if(!hint) return;
+  // 原生 App（Android WebView）内不显示“添加到主屏幕”引导
+  if(/wv|LifeDeskApp/.test(navigator.userAgent||"")){ hint.classList.remove("show"); return; }
+  const dismissed=localStorage.getItem("wb_life_insthint");
+  const standalone=window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true;
+  if(dismissed || standalone) return;
+  hint.classList.add("show");
+  hint.addEventListener("click", function(e){
+    if(e.target.classList.contains("x")){ hint.classList.remove("show"); localStorage.setItem("wb_life_insthint","1"); return; }
+    const m=document.getElementById("installSteps"); if(m) m.classList.add("show");
+  });
+  const noMore=document.getElementById("installNoMore");
+  const close=document.getElementById("installStepsClose");
+  if(close) close.onclick=function(){
+    const m=document.getElementById("installSteps"); if(m) m.classList.remove("show");
+    if(noMore && noMore.checked){ hint.classList.remove("show"); localStorage.setItem("wb_life_insthint","1"); }
+  };
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init); else init();
+</script>
+</body>
+</html>

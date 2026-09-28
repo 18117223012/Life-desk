@@ -1,0 +1,6 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.LifeDesk" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#e8853a</item>
+        <item name="android:navigationBarColor">#e8853a</item>
+    </style>
+</resources>
